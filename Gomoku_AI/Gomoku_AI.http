@@ -1,0 +1,6 @@
+@Gomoku_AI_HostAddress = http://localhost:5147
+
+GET {{Gomoku_AI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
