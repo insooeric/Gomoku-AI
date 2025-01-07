@@ -195,7 +195,7 @@ POST /api/game/minimax-move
 ```jsonc
 {
   "Player": "White",
-  "Row": 2,
+  "Row": 1,
   "Column": 2,
   "Message": "Best move found by Minimax",
   "Status": "Playing"
@@ -219,8 +219,8 @@ POST /api/game/minimax-move
 **Response**:
 ```jsonc
 {
-  "Message": "Invalid board dimensions. The board must be at least 5x5.",
-  "Status": "Error"
+  "message": "Invalid board dimensions. The board must be at least 5x5.",
+  "status": "Error"
 }
 ```
 
