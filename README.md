@@ -164,26 +164,11 @@ Given a Gomoku board and an optional depth, returns either:
 
 ## Running the Project
 
-1. **Clone** or download the repository.
-2. Make sure you have the **.NET 6 SDK** (or higher) installed on your system.
-3. Navigate to the root folder of the solution in your terminal.
-4. Restore dependencies and build the solution:
-   ```shell
-   dotnet restore
-   dotnet build
-   ```
-5. Run the application:
-   ```shell
-   dotnet run
-   ```
-   This will host the API (by default on `https://localhost:5001` or `http://localhost:5000`).
+Run from Visual Studio
 
-6. Test the endpoint (e.g., using **Postman** or **curl**) by sending a **POST** request to:
-   ```
-   POST https://localhost:5001/api/game/minimax-move
-   Content-Type: application/json
-   ```
-   With a valid JSON body as described above.
+Double-click the .sln file to open it in Visual Studio.
+In Solution Explorer, right-click on the project that you want to run (the one containing your Program.cs or Startup.cs) and choose Set as Startup Project.
+Press F5 (or click the green "Start" button) to build and run the project.
 
 ---
 
