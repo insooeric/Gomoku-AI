@@ -25,7 +25,7 @@ Below is an overview of the project's logic, structure, and how to use it.
 
 ## Overview
 
-This .NET 6 (or later) project exposes a single API endpoint that receives a 2D board layout for a Gomoku game. It analyzes the board to determine:
+This .NET 8 (or later) project exposes a single API endpoint that receives a 2D board layout for a Gomoku game. It analyzes the board to determine:
 - Whether the board is valid (dimensions, counts of black/white stones, etc.).
 - Whether the game is already over (detects a winner or a draw).
 - If the board is valid and the game is ongoing, it uses **Minimax** to find the best next move for the AI player under **Renju** rules (with forbidden moves for Black).
