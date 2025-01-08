@@ -9,6 +9,7 @@ namespace Gomoku_AI.Controllers
     public class GameController : ControllerBase
     {
         [HttpPost("minimax-move")]
+        // revision
         public IActionResult GetMinimaxMove([FromBody] MinimaxRequest request)
         {
             if (request == null || request.Board == null || request.Board.Count == 0)
