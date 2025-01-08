@@ -28,11 +28,18 @@ namespace Gomoku_AI.AIModels.HMA_B
 
         public (int, int) GetBestMove(int[,] board, int currentPlayer)
         {
-            // ERROR WITH WHITE ERROR WITH WHITE ERROR WITH WHITE ERROR WITH WHITE 
-            // ERROR WITH WHITE ERROR WITH WHITE ERROR WITH WHITE ERROR WITH WHITE 
-            // ERROR WITH WHITE ERROR WITH WHITE ERROR WITH WHITE ERROR WITH WHITE 
-            // ERROR WITH WHITE ERROR WITH WHITE ERROR WITH WHITE ERROR WITH WHITE 
-            // ERROR WITH WHITE ERROR WITH WHITE ERROR WITH WHITE ERROR WITH WHITE 
+            int[,] tmpBoard = (int[,])board.Clone();
+
+            if(currentPlayer == -1)
+            {
+                for (int x = 0; x < boardSizeX; x++)
+                {
+                    for (int y = 0; y < boardSizeY; y++)
+                    {
+                        tmpBoard[x, y] = -tmpBoard[x, y];
+                    }
+                }
+            }
 
             int score = 0;
             int bestX = -1;
@@ -40,7 +47,7 @@ namespace Gomoku_AI.AIModels.HMA_B
 
 
             (score, bestX, bestY) = Minimax(
-                board,
+                tmpBoard,
                 currentDepth: depth,
                 alpha: Int32.MinValue,
                 beta: Int32.MaxValue,
