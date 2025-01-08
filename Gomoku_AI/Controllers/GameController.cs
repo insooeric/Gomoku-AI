@@ -18,8 +18,9 @@ namespace Gomoku_AI.Controllers
             {
                 return BadRequest(new
                 {
-                    ErrorCode = validationResult.Item1,
-                    Message = validationResult.Item2
+                    status = "Error",
+                    errorCode = validationResult.Item1,
+                    message = validationResult.Item2
                 });
             }
 
@@ -60,10 +61,11 @@ namespace Gomoku_AI.Controllers
             {
                 return Ok(new
                 {
-                    X = -1,
-                    Y = -1,
-                    Color = "Black",
-                    Status = "Black Wins"
+                    status = "Win",
+                    x = -1,
+                    y = -1,
+                    color = "Black",
+                    message = "Black Wins 🎉"
                 });
             }
 
@@ -71,10 +73,11 @@ namespace Gomoku_AI.Controllers
             {
                 return Ok(new
                 {
-                    X = -1,
-                    Y = -1,
-                    Color = "White",
-                    Status = "White Wins"
+                    status = "Win",
+                    x = -1,
+                    y = -1,
+                    color = "White",
+                    message = "White Wins 🎉"
                 });
             }
 
@@ -84,10 +87,11 @@ namespace Gomoku_AI.Controllers
             {
                 return Ok(new
                 {
-                    X = -1,
-                    Y = -1,
-                    Color = "None",
-                    Status = "Draw"
+                    status = "Draw",
+                    x = -1,
+                    y = -1,
+                    color = "None",
+                    message = "It's a Draw 🤝"
                 });
             }
 
@@ -98,19 +102,21 @@ namespace Gomoku_AI.Controllers
             {
                 return Ok(new
                 {
-                    X = bestMove.Item2,
-                    Y = bestMove.Item3,
-                    Color = (currentPlayer == 1) ? "Black" : "White",
-                    Status = "No valid move"
+                    status = "NoMove",
+                    x = bestMove.Item2,
+                    y = bestMove.Item3,
+                    color = currentPlayer == 1 ? "Black" : "White",
+                    message = "No valid move."
                 });
             }
 
             return Ok(new
             {
-                X = bestMove.Item2,
-                Y = bestMove.Item3,
-                Color = (currentPlayer == 1) ? "Black" : "White",
-                Status = "Playing"
+                status = "Playing",
+                x = bestMove.Item2,
+                y = bestMove.Item3,
+                color = currentPlayer == 1 ? "Black" : "White",
+                message = "Playing"
             });
         }
 
