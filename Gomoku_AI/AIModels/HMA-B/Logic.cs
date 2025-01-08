@@ -25,7 +25,7 @@ namespace Gomoku_AI.AIModels.HMA_B
             this.evaluator = new Evaluator(boardSizeX, boardSizeY, rule);
         }
 
-        public (int, int) GetBestMove(int[,] board, int currentPlayer)
+        public (double, int, int) GetBestMove(int[,] board, int currentPlayer)
         {
             int[,] tmpBoard = (int[,])board.Clone();
 
@@ -57,7 +57,7 @@ namespace Gomoku_AI.AIModels.HMA_B
                 currentPlayer: currentPlayer
             );
 
-            return (bestX, bestY);
+            return (score, bestX, bestY);
         }
 
         private (int score, int x, int y) Minimax(int[,] board, int currentDepth, int alpha, int beta, int currentPlayer)

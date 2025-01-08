@@ -56,20 +56,77 @@ namespace Gomoku_AI.Controllers
                 return BadRequest(new { Message = "Invalid rule type." });
             }
 
+            if (rule.IsWinning(board, 1))
+            {
+                return Ok(new
+                {
+                    X = -1,
+                    Y = -1,
+                    Color = "Black",
+                    Status = "Black Wins"
+                });
+            }
+
+            if (rule.IsWinning(board, -1))
+            {
+                return Ok(new
+                {
+                    X = -1,
+                    Y = -1,
+                    Color = "White",
+                    Status = "White Wins"
+                });
+            }
+
+            // 8. Check if the Board is Full (Draw)
+            bool isFull = IsBoardFull(board, boardSizeX, boardSizeY);
+            if (isFull)
+            {
+                return Ok(new
+                {
+                    X = -1,
+                    Y = -1,
+                    Color = "None",
+                    Status = "Draw"
+                });
+            }
+
             var logic = new Logic(boardSizeX, boardSizeY, depth, rule);
             var bestMove = logic.GetBestMove(board, currentPlayer);
 
-            if (bestMove.Item1 == -1 && bestMove.Item2 == -1)
+            if (bestMove.Item2 == -1 && bestMove.Item3 == -1)
             {
-                return Ok(new { Message = "No valid moves available." });
+                return Ok(new
+                {
+                    X = bestMove.Item2,
+                    Y = bestMove.Item3,
+                    Color = (currentPlayer == 1) ? "Black" : "White",
+                    Status = "No valid move"
+                });
             }
 
             return Ok(new
             {
-                X = bestMove.Item1,
-                Y = bestMove.Item2,
-                Color = (currentPlayer == 1) ? "Black" : "White"
+                X = bestMove.Item2,
+                Y = bestMove.Item3,
+                Color = (currentPlayer == 1) ? "Black" : "White",
+                Status = "Playing"
             });
+        }
+
+        private bool IsBoardFull(int[,] board, int boardSizeX, int boardSizeY)
+        {
+            for (int x = 0; x < boardSizeX; x++)
+            {
+                for (int y = 0; y < boardSizeY; y++)
+                {
+                    if (board[x, y] == 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
     }
 }
