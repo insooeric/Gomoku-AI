@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Gomoku_AI.RuleModels;
+﻿using Gomoku_AI.RuleModels;
 
 namespace Gomoku_AI.AIModels.HMA_B
 {
@@ -10,14 +7,16 @@ namespace Gomoku_AI.AIModels.HMA_B
         private readonly int boardSizeX;
         private readonly int boardSizeY;
         private readonly int depth;
-        private readonly FreeStyle rule;
+        private readonly IRule rule;
 
         private const int WIN_SCORE = 1000000;
         private const int LOSE_SCORE = -1000000;
 
+        private int realPlayer;
+
         private readonly Evaluator evaluator;
 
-        public Logic(int boardSizeX, int boardSizeY, int depth, FreeStyle rule)
+        public Logic(int boardSizeX, int boardSizeY, int depth, IRule rule)
         {
             this.boardSizeX = boardSizeX;
             this.boardSizeY = boardSizeY;
@@ -39,6 +38,10 @@ namespace Gomoku_AI.AIModels.HMA_B
                         tmpBoard[x, y] = -tmpBoard[x, y];
                     }
                 }
+                realPlayer = -1;
+            } else
+            {
+                realPlayer = 1;
             }
 
             int score = 0;
@@ -56,10 +59,11 @@ namespace Gomoku_AI.AIModels.HMA_B
 
             return (bestX, bestY);
         }
+
         private (int score, int x, int y) Minimax(int[,] board, int currentDepth, int alpha, int beta, int currentPlayer)
         {
             int evaluation = evaluator.EvaluateBoard(board);
-            Console.WriteLine($"Evaluation: {evaluation}");
+            // Console.WriteLine($"Evaluation: {evaluation}");
             if (Math.Abs(evaluation) == WIN_SCORE || currentDepth == 0 || IsBoardFull(board))
             {
                 
@@ -71,7 +75,7 @@ namespace Gomoku_AI.AIModels.HMA_B
 
             bool maximizing = (currentPlayer == 1);
 
-            var possibleMoves = GeneratePossibleMoves(board);
+            var possibleMoves = GeneratePossibleMoves(board, realPlayer);
 
 
             if (maximizing)
@@ -80,6 +84,7 @@ namespace Gomoku_AI.AIModels.HMA_B
                 foreach ((int moveX, int moveY) in possibleMoves)
                 {
                     board[moveX, moveY] = currentPlayer;
+
 
                     var (childScore, _, _) = Minimax(board, currentDepth - 1, alpha, beta, -currentPlayer);
 
@@ -128,7 +133,7 @@ namespace Gomoku_AI.AIModels.HMA_B
             }
         }
 
-        private List<(int x, int y)> GeneratePossibleMoves(int[,] board)
+        private List<(int x, int y)> GeneratePossibleMoves(int[,] board, int realPlayer)
         {
             var moves = new List<(int x, int y)>();
             for (int x = 0; x < boardSizeX; x++)
@@ -137,6 +142,18 @@ namespace Gomoku_AI.AIModels.HMA_B
                 {
                     if (board[x, y] == 0)
                     {
+                        if (realPlayer == 1 && rule is Renju renjuRule)
+                        {
+                            board[x, y] = 1;
+
+                            if (renjuRule.IsForbiddenMove(board))
+                            {
+                                board[x, y] = 0;
+                                continue;       
+                            }
+
+                            board[x, y] = 0;
+                        }
                         moves.Add((x, y));
                     }
                 }

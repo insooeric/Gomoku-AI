@@ -11,18 +11,21 @@ namespace Gomoku_AI.MiddleWares
                 return (ErrorCode.InvalidBoard, "Invalid board. Board size should be larger than 7 x 7.");
             }
 
-            if (input.Depth < 3)
+            if (input.Depth < 1)
             {
-                return (ErrorCode.InvalidDepth, "Invalid depth. Depth should be larger than 2.");
+                return (ErrorCode.InvalidDepth, "Invalid depth. Depth should be larger than 0.");
             }
 
             string txt =
                 $"{input.RuleType} is invalid rule.\n Rule should be one of the followings:\n" +
-                "- freestyle\n";
+                "- freestyle\n" +
+                "- renju\n";
 
             switch (input.RuleType)
             {
                 case "freestyle":
+                    break;
+                case "renju":
                     break;
                 default:
                     return (ErrorCode.InvalidRuleType, txt);

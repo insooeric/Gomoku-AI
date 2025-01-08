@@ -7,12 +7,12 @@ namespace Gomoku_AI.AIModels.HMA_B
     {
         private readonly int boardSizeX;
         private readonly int boardSizeY;
-        private readonly FreeStyle rule;
+        private readonly IRule rule;
 
         private const int WIN_SCORE = 1000000;
         private const int LOSE_SCORE = -1000000;
 
-        public Evaluator(int boardSizeX, int boardSizeY, FreeStyle rule)
+        public Evaluator(int boardSizeX, int boardSizeY, IRule rule)
         {
             this.boardSizeX = boardSizeX;
             this.boardSizeY = boardSizeY;
@@ -23,13 +23,13 @@ namespace Gomoku_AI.AIModels.HMA_B
         {
             if (rule.IsWinning(board, 1))
             {
-                Console.WriteLine("Black is winning");
+                // Console.WriteLine("Black is winning");
                 return WIN_SCORE;
             }
 
             if (rule.IsWinning(board, -1))
             {
-                Console.WriteLine("White is winning");
+                // Console.WriteLine("White is winning");
                 return LOSE_SCORE;
             }
 

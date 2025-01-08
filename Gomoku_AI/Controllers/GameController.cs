@@ -41,7 +41,22 @@ namespace Gomoku_AI.Controllers
 
             int depth = request.Depth;
 
-            var logic = new Logic(boardSizeX, boardSizeY, depth, new FreeStyle(boardSizeX, boardSizeY));
+            IRule? rule = null;
+            if (string.Equals(request.RuleType, "renju"))
+            {
+                rule = new Renju(boardSizeX, boardSizeY);
+            }
+            else if (string.Equals(request.RuleType, "freestyle"))
+            {
+                rule = new FreeStyle(boardSizeX, boardSizeY);
+            }
+
+            if(rule == null)
+            {
+                return BadRequest(new { Message = "Invalid rule type." });
+            }
+
+            var logic = new Logic(boardSizeX, boardSizeY, depth, rule);
             var bestMove = logic.GetBestMove(board, currentPlayer);
 
             if (bestMove.Item1 == -1 && bestMove.Item2 == -1)

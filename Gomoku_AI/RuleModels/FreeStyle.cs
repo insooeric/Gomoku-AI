@@ -1,6 +1,6 @@
 ﻿namespace Gomoku_AI.RuleModels
 {
-    public class FreeStyle
+    public class FreeStyle : IRule
     {
         private readonly int boardSizeX;
         private readonly int boardSizeY;
