@@ -31,21 +31,21 @@ namespace Gomoku_AI.RuleModels
         {
             if (HasOverline(board, 1))
             {
-                Console.WriteLine("Black has overline");
+                // Console.WriteLine("Black has overline");
                 return true;
             }
 
             int openFours = CountOpenFours(board, 1);
             if (openFours >= 2)
             {
-                Console.WriteLine("Black has two open fours");
+                // Console.WriteLine("Black has two open fours");
                 return true;
             }
 
             int openThrees = CountOpenThrees(board, 1);
             if (openThrees >= 2)
             {
-                Console.WriteLine("Black has two open threes");
+                // Console.WriteLine("Black has two open threes");
                 return true;
             }
 
