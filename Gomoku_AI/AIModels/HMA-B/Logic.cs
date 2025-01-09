@@ -1,4 +1,7 @@
 ﻿using Gomoku_AI.RuleModels;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Gomoku_AI.AIModels.HMA_B
 {
@@ -28,7 +31,18 @@ namespace Gomoku_AI.AIModels.HMA_B
         public (double, int, int) GetBestMove(int[,] board, int currentPlayer)
         {
             int[,] tmpBoard = (int[,])board.Clone();
-            realPlayer = currentPlayer;
+            bool isWhite = (currentPlayer == -1);
+
+            if (isWhite)
+            {
+                realPlayer = -1;
+            }
+            else
+            {
+                realPlayer = 1;
+            }
+
+            // Console.WriteLine("Current player: " + (realPlayer == 1 ? "Black" : "White"));
 
             int score = 0;
             int bestX = -1;
@@ -39,8 +53,15 @@ namespace Gomoku_AI.AIModels.HMA_B
                 currentDepth: depth,
                 alpha: Int32.MinValue,
                 beta: Int32.MaxValue,
-                currentPlayer: currentPlayer
+                currentPlayer: realPlayer
             );
+
+            string color = isWhite ? "White" : "Black";
+
+            if (bestX == -1 && bestY == -1)
+            {
+                return (score, bestX, bestY);
+            }
 
             return (score, bestX, bestY);
         }
@@ -48,10 +69,9 @@ namespace Gomoku_AI.AIModels.HMA_B
         private (int score, int x, int y) Minimax(int[,] board, int currentDepth, int alpha, int beta, int currentPlayer)
         {
             int evaluation = evaluator.EvaluateBoard(board);
-            // Console.WriteLine($"Evaluation: {evaluation}");
+            // Console.WriteLine($"Depth: {currentDepth}, Player: {(currentPlayer == 1 ? "Black" : "White")}, Evaluation: {evaluation}");
             if (Math.Abs(evaluation) == WIN_SCORE || currentDepth == 0 || IsBoardFull(board))
             {
-                
                 return (evaluation, -1, -1);
             }
 
@@ -62,14 +82,12 @@ namespace Gomoku_AI.AIModels.HMA_B
 
             var possibleMoves = GeneratePossibleMoves(board, realPlayer);
 
-
             if (maximizing)
             {
                 int maxEval = Int32.MinValue;
                 foreach ((int moveX, int moveY) in possibleMoves)
                 {
                     board[moveX, moveY] = currentPlayer;
-
 
                     var (childScore, _, _) = Minimax(board, currentDepth - 1, alpha, beta, -currentPlayer);
 
@@ -134,16 +152,66 @@ namespace Gomoku_AI.AIModels.HMA_B
                             if (renjuRule.IsForbiddenMove(board))
                             {
                                 board[x, y] = 0;
-                                continue;       
+                                continue;
                             }
 
                             board[x, y] = 0;
                         }
-                        moves.Add((x, y));
+
+                        if (IsMoveNearStones(board, x, y))
+                        {
+                            moves.Add((x, y));
+                        }
                     }
                 }
             }
+
+            moves = moves.OrderByDescending(move => GetMovePriority(board, move.x, move.y)).ToList();
+
             return moves;
+        }
+
+        private bool IsMoveNearStones(int[,] board, int x, int y)
+        {
+            for (int dx = -2; dx <= 2; dx++)
+            {
+                for (int dy = -2; dy <= 2; dy++)
+                {
+                    if (dx == 0 && dy == 0) continue;
+                    int nx = x + dx;
+                    int ny = y + dy;
+                    if (nx >= 0 && nx < boardSizeX && ny >= 0 && ny < boardSizeY)
+                    {
+                        if (board[nx, ny] != 0)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        private int GetMovePriority(int[,] board, int x, int y)
+        {
+            int score = 0;
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                for (int dy = -1; dy <= 1; dy++)
+                {
+                    if (dx == 0 && dy == 0) continue;
+                    int nx = x + dx;
+                    int ny = y + dy;
+                    if (nx >= 0 && nx < boardSizeX && ny >= 0 && ny < boardSizeY)
+                    {
+                        if (board[nx, ny] != 0)
+                        {
+                            score++;
+                        }
+                    }
+                }
+            }
+            return score;
         }
 
         private bool IsBoardFull(int[,] board)

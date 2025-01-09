@@ -13,36 +13,39 @@ namespace Gomoku_AI.RuleModels
             this.boardSizeX = boardSizeX;
             this.boardSizeY = boardSizeY;
         }
+
         public bool IsWinning(int[,] board, int player)
         {
-            if (player == 1)
+            if (player == 1 && IsForbiddenMove(board))
             {
-                if (IsForbiddenMove(board))
-                {
-                    // Console.WriteLine("Forbidden move");
-                    return false;
-                }
+                return false;
             }
+
             return CheckRows(board, player)
                 || CheckColumns(board, player)
                 || CheckDiagonals(board, player)
                 || CheckAntiDiagonals(board, player);
         }
+
         public bool IsForbiddenMove(int[,] board)
         {
             if (HasOverline(board, 1))
             {
-                return true;
-            }
-            int fourCount = CountOpenOrClosedFours(board, 1);
-            if (fourCount >= 2)
-            {
+                Console.WriteLine("Black has overline");
                 return true;
             }
 
-            int threeCount = CountOpenOrClosedThrees(board, 1);
-            if (threeCount >= 2)
+            int openFours = CountOpenFours(board, 1);
+            if (openFours >= 2)
             {
+                Console.WriteLine("Black has two open fours");
+                return true;
+            }
+
+            int openThrees = CountOpenThrees(board, 1);
+            if (openThrees >= 2)
+            {
+                Console.WriteLine("Black has two open threes");
                 return true;
             }
 
@@ -102,20 +105,31 @@ namespace Gomoku_AI.RuleModels
             return false;
         }
 
-        private int CountOpenOrClosedFours(int[,] board, int player)
+        private int CountOpenFours(int[,] board, int player)
         {
-            int foursCount = 0;
+            int openFours = 0;
 
             for (int x = 0; x < boardSizeX; x++)
             {
                 for (int y = 0; y <= boardSizeY - 4; y++)
                 {
-                    if (board[x, y] == player &&
-                        board[x, y + 1] == player &&
-                        board[x, y + 2] == player &&
-                        board[x, y + 3] == player)
+                    bool sequence = true;
+                    for (int i = 0; i < 4; i++)
                     {
-                        foursCount++;
+                        if (board[x, y + i] != player)
+                        {
+                            sequence = false;
+                            break;
+                        }
+                    }
+                    if (sequence)
+                    {
+                        bool openLeft = (y - 1 >= 0) && (board[x, y - 1] == 0);
+                        bool openRight = (y + 4 < boardSizeY) && (board[x, y + 4] == 0);
+                        if (openLeft && openRight)
+                        {
+                            openFours++;
+                        }
                     }
                 }
             }
@@ -124,12 +138,23 @@ namespace Gomoku_AI.RuleModels
             {
                 for (int x = 0; x <= boardSizeX - 4; x++)
                 {
-                    if (board[x, y] == player &&
-                        board[x + 1, y] == player &&
-                        board[x + 2, y] == player &&
-                        board[x + 3, y] == player)
+                    bool sequence = true;
+                    for (int i = 0; i < 4; i++)
                     {
-                        foursCount++;
+                        if (board[x + i, y] != player)
+                        {
+                            sequence = false;
+                            break;
+                        }
+                    }
+                    if (sequence)
+                    {
+                        bool openTop = (x - 1 >= 0) && (board[x - 1, y] == 0);
+                        bool openBottom = (x + 4 < boardSizeX) && (board[x + 4, y] == 0);
+                        if (openTop && openBottom)
+                        {
+                            openFours++;
+                        }
                     }
                 }
             }
@@ -138,12 +163,23 @@ namespace Gomoku_AI.RuleModels
             {
                 for (int y = 0; y <= boardSizeY - 4; y++)
                 {
-                    if (board[x, y] == player &&
-                        board[x + 1, y + 1] == player &&
-                        board[x + 2, y + 2] == player &&
-                        board[x + 3, y + 3] == player)
+                    bool sequence = true;
+                    for (int i = 0; i < 4; i++)
                     {
-                        foursCount++;
+                        if (board[x + i, y + i] != player)
+                        {
+                            sequence = false;
+                            break;
+                        }
+                    }
+                    if (sequence)
+                    {
+                        bool openStart = (x - 1 >= 0) && (y - 1 >= 0) && (board[x - 1, y - 1] == 0);
+                        bool openEnd = (x + 4 < boardSizeX) && (y + 4 < boardSizeY) && (board[x + 4, y + 4] == 0);
+                        if (openStart && openEnd)
+                        {
+                            openFours++;
+                        }
                     }
                 }
             }
@@ -152,31 +188,55 @@ namespace Gomoku_AI.RuleModels
             {
                 for (int y = 3; y < boardSizeY; y++)
                 {
-                    if (board[x, y] == player &&
-                        board[x + 1, y - 1] == player &&
-                        board[x + 2, y - 2] == player &&
-                        board[x + 3, y - 3] == player)
+                    bool sequence = true;
+                    for (int i = 0; i < 4; i++)
                     {
-                        foursCount++;
+                        if (board[x + i, y - i] != player)
+                        {
+                            sequence = false;
+                            break;
+                        }
+                    }
+                    if (sequence)
+                    {
+                        bool openStart = (x - 1 >= 0) && (y + 1 < boardSizeY) && (board[x - 1, y + 1] == 0);
+                        bool openEnd = (x + 4 < boardSizeX) && (y - 4 >= 0) && (board[x + 4, y - 4] == 0);
+                        if (openStart && openEnd)
+                        {
+                            openFours++;
+                        }
                     }
                 }
             }
 
-            return foursCount;
+            return openFours;
         }
 
-
-        private int CountOpenOrClosedThrees(int[,] board, int player)
+        private int CountOpenThrees(int[,] board, int player)
         {
-            int threesCount = 0;
+            int openThrees = 0;
 
             for (int x = 0; x < boardSizeX; x++)
             {
                 for (int y = 0; y <= boardSizeY - 3; y++)
                 {
-                    if (IsThree(board, player, x, y, 0, 1))
+                    bool sequence = true;
+                    for (int i = 0; i < 3; i++)
                     {
-                        threesCount++;
+                        if (board[x, y + i] != player)
+                        {
+                            sequence = false;
+                            break;
+                        }
+                    }
+                    if (sequence)
+                    {
+                        bool openLeft = (y - 1 >= 0) && (board[x, y - 1] == 0);
+                        bool openRight = (y + 3 < boardSizeY) && (board[x, y + 3] == 0);
+                        if (openLeft && openRight)
+                        {
+                            openThrees++;
+                        }
                     }
                 }
             }
@@ -185,9 +245,23 @@ namespace Gomoku_AI.RuleModels
             {
                 for (int x = 0; x <= boardSizeX - 3; x++)
                 {
-                    if (IsThree(board, player, x, y, 1, 0)) 
+                    bool sequence = true;
+                    for (int i = 0; i < 3; i++)
                     {
-                        threesCount++;
+                        if (board[x + i, y] != player)
+                        {
+                            sequence = false;
+                            break;
+                        }
+                    }
+                    if (sequence)
+                    {
+                        bool openTop = (x - 1 >= 0) && (board[x - 1, y] == 0);
+                        bool openBottom = (x + 3 < boardSizeX) && (board[x + 3, y] == 0);
+                        if (openTop && openBottom)
+                        {
+                            openThrees++;
+                        }
                     }
                 }
             }
@@ -196,9 +270,23 @@ namespace Gomoku_AI.RuleModels
             {
                 for (int y = 0; y <= boardSizeY - 3; y++)
                 {
-                    if (IsThree(board, player, x, y, 1, 1))
+                    bool sequence = true;
+                    for (int i = 0; i < 3; i++)
                     {
-                        threesCount++;
+                        if (board[x + i, y + i] != player)
+                        {
+                            sequence = false;
+                            break;
+                        }
+                    }
+                    if (sequence)
+                    {
+                        bool openStart = (x - 1 >= 0) && (y - 1 >= 0) && (board[x - 1, y - 1] == 0);
+                        bool openEnd = (x + 3 < boardSizeX) && (y + 3 < boardSizeY) && (board[x + 3, y + 3] == 0);
+                        if (openStart && openEnd)
+                        {
+                            openThrees++;
+                        }
                     }
                 }
             }
@@ -207,14 +295,28 @@ namespace Gomoku_AI.RuleModels
             {
                 for (int y = 2; y < boardSizeY; y++)
                 {
-                    if (IsThree(board, player, x, y, 1, -1)) 
+                    bool sequence = true;
+                    for (int i = 0; i < 3; i++)
                     {
-                        threesCount++;
+                        if (board[x + i, y - i] != player)
+                        {
+                            sequence = false;
+                            break;
+                        }
+                    }
+                    if (sequence)
+                    {
+                        bool openStart = (x - 1 >= 0) && (y + 1 < boardSizeY) && (board[x - 1, y + 1] == 0);
+                        bool openEnd = (x + 3 < boardSizeX) && (y - 3 >= 0) && (board[x + 3, y - 3] == 0);
+                        if (openStart && openEnd)
+                        {
+                            openThrees++;
+                        }
                     }
                 }
             }
 
-            return threesCount;
+            return openThrees;
         }
 
         private bool IsThree(int[,] board, int player, int startX, int startY, int deltaX, int deltaY)
@@ -246,13 +348,8 @@ namespace Gomoku_AI.RuleModels
             bool isOpenLeft = prevX >= 0 && prevX < boardSizeX && prevY >= 0 && prevY < boardSizeY && board[prevX, prevY] == 0;
             bool isOpenRight = nextX >= 0 && nextX < boardSizeX && nextY >= 0 && nextY < boardSizeY && board[nextX, nextY] == 0;
 
-            if (isOpenLeft && isOpenRight) return true;
-
-            if (isOpenLeft || isOpenRight) return true;
-
-            return false;
+            return isOpenLeft && isOpenRight;
         }
-
 
         private bool CheckRows(int[,] board, int player)
         {
@@ -337,6 +434,5 @@ namespace Gomoku_AI.RuleModels
             }
             return false;
         }
-
     }
 }
