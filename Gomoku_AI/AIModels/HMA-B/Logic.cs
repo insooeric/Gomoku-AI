@@ -28,26 +28,11 @@ namespace Gomoku_AI.AIModels.HMA_B
         public (double, int, int) GetBestMove(int[,] board, int currentPlayer)
         {
             int[,] tmpBoard = (int[,])board.Clone();
-
-            if(currentPlayer == -1)
-            {
-                for (int x = 0; x < boardSizeX; x++)
-                {
-                    for (int y = 0; y < boardSizeY; y++)
-                    {
-                        tmpBoard[x, y] = -tmpBoard[x, y];
-                    }
-                }
-                realPlayer = -1;
-            } else
-            {
-                realPlayer = 1;
-            }
+            realPlayer = currentPlayer;
 
             int score = 0;
             int bestX = -1;
             int bestY = -1;
-
 
             (score, bestX, bestY) = Minimax(
                 tmpBoard,

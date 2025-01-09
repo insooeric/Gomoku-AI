@@ -152,9 +152,9 @@ namespace Gomoku_AI.AIModels.HMA_B
                 case 2: return 10;
                 case 3: return 50;
                 case 4: return 500;
-                case 5: return 10000;
+                case 5: return 1000000;
                 default:
-                    return 10000 * length;
+                    return 1000000 * length;
             }
         }
     }
