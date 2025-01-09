@@ -53,7 +53,7 @@ The project is divided into the following main components:
 ## How It Works
 
 ### Entry
-1. The client (or another application) sends a **POST** request to the `/api/game/minimax-move` endpoint.
+1. The client (or another application) sends a **POST** request to the `/api/gomoku/minimax-move` endpoint.
 2. The request must include a JSON body matching **MinimaxRequest**, which contains:
    - A 2D list (`List<List<int>>`) representing the board:
      - **0** indicates an empty cell.
@@ -105,7 +105,8 @@ Given a Gomoku board and an optional depth, returns either:
     [ 0,  0,  0,  1,  0],
     [ 0,  0,  0,  0, -1]
   ],
-  "Depth": 4 // optional
+  "Depth": 4,
+  "RuleType": "renju" // "freestyle" also available
 }
 ```
 
@@ -120,33 +121,33 @@ Given a Gomoku board and an optional depth, returns either:
 **On success** (and the game still in progress):
 ```jsonc
 {
-  "Player": "Black",       // or "White"
-  "Row": 3,
-  "Column": 4,
-  "Message": "Best move found by Minimax",
-  "Status": "Playing"
+   Status: 'Playing',
+   X: 6,
+   Y: 2,
+   Color: 'Black', // or "White"
+   Message: 'Playing'
 }
 ```
 
 **If the game is already won**:
 ```jsonc
 {
-  "Player": "Black", // or "White"
-  "Column": -1,
-  "Row": -1,
-  "Message": "The game is already over.",
-  "Status": "Game Over"
+   Status: 'Win',
+   X: 2,
+   Y: 6,
+   Color: 'White', // or "Black"
+   Message: 'White Wins 🎉'
 }
 ```
 
 **If the game is a draw**:
 ```jsonc
 {
-  "Player": "Draw",
-  "Column": -1,
-  "Row": -1,
-  "Message": "The game is a draw.",
-  "Status": "Draw"
+   Status: 'Draw',
+   X: -1,
+   Y: -1,
+   Color: 'White', // or "Black"
+   Message: 'It's a Draw 🤝'
 }
 ```
 
