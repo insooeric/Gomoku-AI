@@ -7,6 +7,7 @@
         InvalidDepth = 2,
         InvalidRuleType = 3,
         InvalidStoneCount = 4,
-        InvalidBoardValues = 5
+        InvalidBoardValues = 5,
+        InvalidGameStatus = 6
     }
 }

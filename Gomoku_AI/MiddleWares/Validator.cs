@@ -4,7 +4,16 @@ namespace Gomoku_AI.MiddleWares
 {
     public class Validator
     {
-        public static (ErrorCode, string) ValidateInput(InputModel input)
+/*        CheckBoardStatus gameStatus;
+        int boardX, boardY;*/
+
+        public Validator(int boardX, int boardY)
+        {
+/*            gameStatus = new CheckBoardStatus(boardX, boardY);
+            this.boardX = boardX;
+            this.boardY = boardY;*/
+        }
+        public (ErrorCode, string) ValidateInput(InputModel input)
         {
             if (input.Board == null || input.Board.Count < 8)
             {
@@ -50,5 +59,20 @@ namespace Gomoku_AI.MiddleWares
 
             return (ErrorCode.None, "Valid input");
         }
+
+/*        public int ValidateGame(int[,] board)
+        {
+            if(gameStatus.CheckWinner(board) == 1)
+            {
+                return 1;
+            }
+
+            if (gameStatus.CheckWinner(board) == -1)
+            {
+                return -1;
+            }
+
+            return 0;
+        }*/
     }
 }

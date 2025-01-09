@@ -13,18 +13,8 @@ namespace Gomoku_AI.Controllers
         [HttpPost("minimax-move")]
         public IActionResult GetMinimaxMove([FromBody] InputModel request)
         {
-            var validationResult = Validator.ValidateInput(request);
-            if (validationResult.Item1 != ErrorCode.None)
-            {
-                return BadRequest(new
-                {
-                    status = "Error",
-                    errorCode = validationResult.Item1,
-                    message = validationResult.Item2
-                });
-            }
 
-            int boardSizeX = request.Board.Count; 
+            int boardSizeX = request.Board.Count;
             int boardSizeY = request.Board[0].Count;
 
             int[,] board = new int[boardSizeX, boardSizeY];
@@ -42,7 +32,59 @@ namespace Gomoku_AI.Controllers
 
             int depth = request.Depth;
 
-            IRule? rule = null;
+            Validator validator = new Validator(boardSizeX, boardSizeY);
+            CheckBoardStatus boardValidator = new CheckBoardStatus(boardSizeX, boardSizeY);
+
+            var validationResult = validator.ValidateInput(request);
+
+            if (validationResult.Item1 != ErrorCode.None)
+            {
+                return BadRequest(new
+                {
+                    status = "Error",
+                    errorCode = validationResult.Item1,
+                    message = validationResult.Item2
+                });
+            }
+
+            if (boardValidator.CheckWinner(board) == 1)
+            {
+                return Ok(new
+                {
+                    status = "Win",
+                    x = -1,
+                    y = -1,
+                    color = currentPlayer == 1 ? "Black" : "White",
+                    message = "Black Wins 🎉"
+                });
+            }
+
+            if (boardValidator.CheckWinner(board) == -1)
+            {
+                return Ok(new
+                {
+                    status = "Win",
+                    x = -1,
+                    y = -1,
+                    color = currentPlayer == 1 ? "Black" : "White",
+                    message = "White Wins 🎉"
+                });
+            }
+
+            if (boardValidator.IsBoardFull(board))
+            {
+                return Ok(new
+                {
+                    status = "Draw",
+                    x = -1,
+                    y = -1,
+                    color = currentPlayer == 1 ? "Black" : "White",
+                    message = "It's a Draw 🤝"
+                });
+            }
+
+
+            IRule ? rule = null;
             if (string.Equals(request.RuleType, "renju"))
             {
                 rule = new Renju(boardSizeX, boardSizeY);
@@ -57,9 +99,28 @@ namespace Gomoku_AI.Controllers
                 return BadRequest(new { Message = "Invalid rule type." });
             }
 
-            CheckBoardStatus gameStatus = new CheckBoardStatus(boardSizeX, boardSizeY);
+            // CheckBoardStatus gameStatus = new CheckBoardStatus(boardSizeX, boardSizeY);
 
-            if (gameStatus.CheckWinner(board) == 1)
+
+
+            var logic = new Logic(boardSizeX, boardSizeY, depth, rule);
+            var bestMove = logic.GetBestMove(board, currentPlayer);
+
+            int[,] tmpBoard = new int[boardSizeX, boardSizeY];
+            for (int x = 0; x < boardSizeX; x++)
+            {
+                for (int y = 0; y < boardSizeY; y++)
+                {
+                    tmpBoard[x, y] = board[x, y];
+                }
+            }
+
+            if (bestMove.Item2 >= 0 && bestMove.Item3 >= 0 && bestMove.Item2 < boardSizeX && bestMove.Item3 < boardSizeY)
+            {
+                tmpBoard[bestMove.Item2, bestMove.Item3] = currentPlayer;
+            }
+
+            if (boardValidator.CheckWinner(tmpBoard) == 1)
             {
                 return Ok(new
                 {
@@ -71,7 +132,7 @@ namespace Gomoku_AI.Controllers
                 });
             }
 
-            if (gameStatus.CheckWinner(board) == -1)
+            if (boardValidator.CheckWinner(tmpBoard) == -1)
             {
                 return Ok(new
                 {
@@ -83,7 +144,7 @@ namespace Gomoku_AI.Controllers
                 });
             }
 
-            if (gameStatus.IsBoardFull(board))
+            if (boardValidator.IsBoardFull(tmpBoard))
             {
                 return Ok(new
                 {
@@ -94,9 +155,6 @@ namespace Gomoku_AI.Controllers
                     message = "It's a Draw 🤝"
                 });
             }
-
-            var logic = new Logic(boardSizeX, boardSizeY, depth, rule);
-            var bestMove = logic.GetBestMove(board, currentPlayer);
 
             if (bestMove.Item2 == -1 && bestMove.Item3 == -1)
             {
