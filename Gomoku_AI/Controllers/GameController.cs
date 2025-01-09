@@ -125,8 +125,8 @@ namespace Gomoku_AI.Controllers
                 return Ok(new
                 {
                     status = "Win",
-                    x = -1,
-                    y = -1,
+                    x = bestMove.Item2,
+                    y = bestMove.Item3,
                     color = currentPlayer == 1 ? "Black" : "White",
                     message = "Black Wins 🎉"
                 });
@@ -137,8 +137,8 @@ namespace Gomoku_AI.Controllers
                 return Ok(new
                 {
                     status = "Win",
-                    x = -1,
-                    y = -1,
+                    x = bestMove.Item2,
+                    y = bestMove.Item3,
                     color = currentPlayer == 1 ? "Black" : "White",
                     message = "White Wins 🎉"
                 });
