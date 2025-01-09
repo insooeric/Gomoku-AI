@@ -57,40 +57,40 @@ namespace Gomoku_AI.Controllers
                 return BadRequest(new { Message = "Invalid rule type." });
             }
 
-            if (rule.IsWinning(board, 1))
+            CheckBoardStatus gameStatus = new CheckBoardStatus(boardSizeX, boardSizeY);
+
+            if (gameStatus.CheckWinner(board) == 1)
             {
                 return Ok(new
                 {
                     status = "Win",
                     x = -1,
                     y = -1,
-                    color = "Black",
+                    color = currentPlayer == 1 ? "Black" : "White",
                     message = "Black Wins 🎉"
                 });
             }
 
-            if (rule.IsWinning(board, -1))
+            if (gameStatus.CheckWinner(board) == -1)
             {
                 return Ok(new
                 {
                     status = "Win",
                     x = -1,
                     y = -1,
-                    color = "White",
+                    color = currentPlayer == 1 ? "Black" : "White",
                     message = "White Wins 🎉"
                 });
             }
 
-            // 8. Check if the Board is Full (Draw)
-            bool isFull = IsBoardFull(board, boardSizeX, boardSizeY);
-            if (isFull)
+            if (gameStatus.IsBoardFull(board))
             {
                 return Ok(new
                 {
                     status = "Draw",
                     x = -1,
                     y = -1,
-                    color = "None",
+                    color = currentPlayer == 1 ? "Black" : "White",
                     message = "It's a Draw 🤝"
                 });
             }
@@ -120,19 +120,6 @@ namespace Gomoku_AI.Controllers
             });
         }
 
-        private bool IsBoardFull(int[,] board, int boardSizeX, int boardSizeY)
-        {
-            for (int x = 0; x < boardSizeX; x++)
-            {
-                for (int y = 0; y < boardSizeY; y++)
-                {
-                    if (board[x, y] == 0)
-                    {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
+
     }
 }
