@@ -19,7 +19,7 @@ namespace Gomoku_AI.RuleModels
             {
                 if (IsForbiddenMove(board))
                 {
-                    Console.WriteLine("Forbidden move");
+                    // Console.WriteLine("Forbidden move");
                     return false;
                 }
             }
