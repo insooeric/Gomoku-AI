@@ -5,17 +5,13 @@ namespace Gomoku_AI.AIModels.HMA_B
 {
     public class Evaluator
     {
-        private readonly int boardSizeX;
-        private readonly int boardSizeY;
         private readonly IRule rule;
 
         private const int WIN_SCORE = 1000000;
         private const int LOSE_SCORE = -1000000;
 
-        public Evaluator(int boardSizeX, int boardSizeY, IRule rule)
+        public Evaluator(IRule rule)
         {
-            this.boardSizeX = boardSizeX;
-            this.boardSizeY = boardSizeY;
             this.rule = rule;
         }
 

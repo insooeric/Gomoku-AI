@@ -2,14 +2,10 @@
 {
     public class FreeStyle : IRule
     {
-        private readonly int boardSizeX;
-        private readonly int boardSizeY;
         private const int WinningCount = 5;
 
-        public FreeStyle(int boardSizeX, int boardSizeY)
+        public FreeStyle()
         {
-            this.boardSizeX = boardSizeX;
-            this.boardSizeY = boardSizeY;
         }
 
         public bool IsWinning(int[,] board, int player)
@@ -22,10 +18,10 @@
 
         private bool CheckRows(int[,] board, int player)
         {
-            for (int x = 0; x < boardSizeX; x++)
+            for (int x = 0; x < board.GetLength(0); x++)
             {
                 int count = 0;
-                for (int y = 0; y < boardSizeY; y++)
+                for (int y = 0; y < board.GetLength(1); y++)
                 {
                     count = (board[x, y] == player) ? count + 1 : 0;
                     if (count >= WinningCount) return true;
@@ -35,10 +31,10 @@
         }
         private bool CheckColumns(int[,] board, int player)
         {
-            for (int y = 0; y < boardSizeY; y++)
+            for (int y = 0; y < board.GetLength(1); y++)
             {
                 int count = 0;
-                for (int x = 0; x < boardSizeX; x++)
+                for (int x = 0; x < board.GetLength(0); x++)
                 {
                     count = (board[x, y] == player) ? count + 1 : 0;
                     if (count >= WinningCount) return true;
@@ -49,13 +45,13 @@
 
         private bool CheckDiagonals(int[,] board, int player)
         {
-            for (int d = -boardSizeX + 1; d < boardSizeY; d++)
+            for (int d = -board.GetLength(0) + 1; d < board.GetLength(1); d++)
             {
                 int count = 0;
-                for (int x = 0; x < boardSizeX; x++)
+                for (int x = 0; x < board.GetLength(0); x++)
                 {
                     int y = x + d;
-                    if (y >= 0 && y < boardSizeY)
+                    if (y >= 0 && y < board.GetLength(1))
                     {
                         count = (board[x, y] == player) ? count + 1 : 0;
                         if (count >= WinningCount) return true;
@@ -66,13 +62,13 @@
         }
         private bool CheckAntiDiagonals(int[,] board, int player)
         {
-            for (int d = 0; d < boardSizeX + boardSizeY - 1; d++)
+            for (int d = 0; d < board.GetLength(0) + board.GetLength(1) - 1; d++)
             {
                 int count = 0;
-                for (int x = 0; x < boardSizeX; x++)
+                for (int x = 0; x < board.GetLength(0); x++)
                 {
                     int y = d - x; 
-                    if (y >= 0 && y < boardSizeY)
+                    if (y >= 0 && y < board.GetLength(1))
                     {
                         count = (board[x, y] == player) ? count + 1 : 0;
                         if (count >= WinningCount) return true;
