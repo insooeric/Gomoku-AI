@@ -7,8 +7,6 @@ namespace Gomoku_AI.AIModels.HMA_B
 {
     public class Logic
     {
-        private readonly int boardSizeX;
-        private readonly int boardSizeY;
         private readonly int depth;
         private readonly IRule rule;
 
@@ -19,13 +17,11 @@ namespace Gomoku_AI.AIModels.HMA_B
 
         private readonly Evaluator evaluator;
 
-        public Logic(int boardSizeX, int boardSizeY, int depth, IRule rule)
+        public Logic(int depth, IRule rule)
         {
-            this.boardSizeX = boardSizeX;
-            this.boardSizeY = boardSizeY;
             this.depth = depth;
             this.rule = rule;
-            this.evaluator = new Evaluator(boardSizeX, boardSizeY, rule);
+            this.evaluator = new Evaluator(rule);
         }
 
         public (double, int, int) GetBestMove(int[,] board, int currentPlayer)
@@ -139,9 +135,9 @@ namespace Gomoku_AI.AIModels.HMA_B
         private List<(int x, int y)> GeneratePossibleMoves(int[,] board, int realPlayer)
         {
             var moves = new List<(int x, int y)>();
-            for (int x = 0; x < boardSizeX; x++)
+            for (int x = 0; x < board.GetLength(0); x++)
             {
-                for (int y = 0; y < boardSizeY; y++)
+                for (int y = 0; y < board.GetLength(1); y++)
                 {
                     if (board[x, y] == 0)
                     {
@@ -180,7 +176,7 @@ namespace Gomoku_AI.AIModels.HMA_B
                     if (dx == 0 && dy == 0) continue;
                     int nx = x + dx;
                     int ny = y + dy;
-                    if (nx >= 0 && nx < boardSizeX && ny >= 0 && ny < boardSizeY)
+                    if (nx >= 0 && nx < board.GetLength(0) && ny >= 0 && ny < board.GetLength(1))
                     {
                         if (board[nx, ny] != 0)
                         {
@@ -202,7 +198,7 @@ namespace Gomoku_AI.AIModels.HMA_B
                     if (dx == 0 && dy == 0) continue;
                     int nx = x + dx;
                     int ny = y + dy;
-                    if (nx >= 0 && nx < boardSizeX && ny >= 0 && ny < boardSizeY)
+                    if (nx >= 0 && nx < board.GetLength(0) && ny >= 0 && ny < board.GetLength(1))
                     {
                         if (board[nx, ny] != 0)
                         {
@@ -216,9 +212,9 @@ namespace Gomoku_AI.AIModels.HMA_B
 
         private bool IsBoardFull(int[,] board)
         {
-            for (int x = 0; x < boardSizeX; x++)
+            for (int x = 0; x < board.GetLength(0); x++)
             {
-                for (int y = 0; y < boardSizeY; y++)
+                for (int y = 0; y < board.GetLength(1); y++)
                 {
                     if (board[x, y] == 0)
                     {

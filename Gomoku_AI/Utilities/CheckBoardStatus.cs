@@ -1,23 +1,13 @@
 ﻿using System.Numerics;
 
-namespace Gomoku_AI.MiddleWares
+namespace Gomoku_AI.Utilities
 {
     public class CheckBoardStatus
     {
-        private readonly int boardSizeX;
-        private readonly int boardSizeY;
         private const int WinningCount = 5;
 
-        public CheckBoardStatus(int boardSizeX, int boardSizeY)
+        public static int CheckWinner(int[,] board)
         {
-            this.boardSizeX = boardSizeX;
-            this.boardSizeY = boardSizeY;
-        }
-
-        public int CheckWinner(int[,] board)
-        {
-            int blackCount = board.Cast<int>().Count(v => v == 1);
-            int whiteCount = board.Cast<int>().Count(v => v == -1);
 
             if (
                 CheckRows(board, 1) ||
@@ -42,11 +32,11 @@ namespace Gomoku_AI.MiddleWares
             return 0;
         }
 
-        public bool IsBoardFull(int[,] board)
+        public static bool IsBoardFull(int[,] board)
         {
-            for (int x = 0; x < boardSizeX; x++)
+            for (int x = 0; x < board.GetLength(0); x++)
             {
-                for (int y = 0; y < boardSizeY; y++)
+                for (int y = 0; y < board.GetLength(1); y++)
                 {
                     if (board[x, y] == 0)
                     {
@@ -57,12 +47,12 @@ namespace Gomoku_AI.MiddleWares
             return true;
         }
 
-        private bool CheckRows(int[,] board, int player)
+        private static bool CheckRows(int[,] board, int player)
         {
-            for (int x = 0; x < boardSizeX; x++)
+            for (int x = 0; x < board.GetLength(0); x++)
             {
                 int count = 0;
-                for (int y = 0; y < boardSizeY; y++)
+                for (int y = 0; y < board.GetLength(1); y++)
                 {
                     count = (board[x, y] == player) ? count + 1 : 0;
                     if (count >= WinningCount) return true;
@@ -70,12 +60,12 @@ namespace Gomoku_AI.MiddleWares
             }
             return false;
         }
-        private bool CheckColumns(int[,] board, int player)
+        private static bool CheckColumns(int[,] board, int player)
         {
-            for (int y = 0; y < boardSizeY; y++)
+            for (int y = 0; y < board.GetLength(1); y++)
             {
                 int count = 0;
-                for (int x = 0; x < boardSizeX; x++)
+                for (int x = 0; x < board.GetLength(0); x++)
                 {
                     count = (board[x, y] == player) ? count + 1 : 0;
                     if (count >= WinningCount) return true;
@@ -84,15 +74,15 @@ namespace Gomoku_AI.MiddleWares
             return false;
         }
 
-        private bool CheckDiagonals(int[,] board, int player)
+        private static bool CheckDiagonals(int[,] board, int player)
         {
-            for (int d = -boardSizeX + 1; d < boardSizeY; d++)
+            for (int d = -board.GetLength(0) + 1; d < board.GetLength(1); d++)
             {
                 int count = 0;
-                for (int x = 0; x < boardSizeX; x++)
+                for (int x = 0; x < board.GetLength(0); x++)
                 {
                     int y = x + d;
-                    if (y >= 0 && y < boardSizeY)
+                    if (y >= 0 && y < board.GetLength(1))
                     {
                         count = (board[x, y] == player) ? count + 1 : 0;
                         if (count >= WinningCount) return true;
@@ -101,15 +91,15 @@ namespace Gomoku_AI.MiddleWares
             }
             return false;
         }
-        private bool CheckAntiDiagonals(int[,] board, int player)
+        private static bool CheckAntiDiagonals(int[,] board, int player)
         {
-            for (int d = 0; d < boardSizeX + boardSizeY - 1; d++)
+            for (int d = 0; d < board.GetLength(0) + board.GetLength(1) - 1; d++)
             {
                 int count = 0;
-                for (int x = 0; x < boardSizeX; x++)
+                for (int x = 0; x < board.GetLength(0); x++)
                 {
                     int y = d - x;
-                    if (y >= 0 && y < boardSizeY)
+                    if (y >= 0 && y < board.GetLength(1))
                     {
                         count = (board[x, y] == player) ? count + 1 : 0;
                         if (count >= WinningCount) return true;

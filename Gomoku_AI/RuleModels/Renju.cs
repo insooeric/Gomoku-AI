@@ -4,14 +4,10 @@ namespace Gomoku_AI.RuleModels
 {
     public class Renju : IRule
     {
-        private readonly int boardSizeX;
-        private readonly int boardSizeY;
         private const int WinningCount = 5;
 
-        public Renju(int boardSizeX, int boardSizeY)
+        public Renju()
         {
-            this.boardSizeX = boardSizeX;
-            this.boardSizeY = boardSizeY;
         }
 
         public bool IsWinning(int[,] board, int player)
@@ -31,21 +27,18 @@ namespace Gomoku_AI.RuleModels
         {
             if (HasOverline(board, 1))
             {
-                // Console.WriteLine("Black has overline");
                 return true;
             }
 
             int openFours = CountOpenFours(board, 1);
             if (openFours >= 2)
             {
-                // Console.WriteLine("Black has two open fours");
                 return true;
             }
 
             int openThrees = CountOpenThrees(board, 1);
             if (openThrees >= 2)
             {
-                // Console.WriteLine("Black has two open threes");
                 return true;
             }
 
@@ -54,33 +47,33 @@ namespace Gomoku_AI.RuleModels
 
         private bool HasOverline(int[,] board, int player)
         {
-            for (int x = 0; x < boardSizeX; x++)
+            for (int x = 0; x < board.GetLength(0); x++)
             {
                 int count = 0;
-                for (int y = 0; y < boardSizeY; y++)
+                for (int y = 0; y < board.GetLength(1); y++)
                 {
                     count = (board[x, y] == player) ? count + 1 : 0;
                     if (count >= 6) return true;
                 }
             }
 
-            for (int y = 0; y < boardSizeY; y++)
+            for (int y = 0; y < board.GetLength(1); y++)
             {
                 int count = 0;
-                for (int x = 0; x < boardSizeX; x++)
+                for (int x = 0; x < board.GetLength(0); x++)
                 {
                     count = (board[x, y] == player) ? count + 1 : 0;
                     if (count >= 6) return true;
                 }
             }
 
-            for (int d = -boardSizeX + 1; d < boardSizeY; d++)
+            for (int d = -board.GetLength(0) + 1; d < board.GetLength(1); d++)
             {
                 int count = 0;
-                for (int x = 0; x < boardSizeX; x++)
+                for (int x = 0; x < board.GetLength(0); x++)
                 {
                     int y = x + d;
-                    if (y >= 0 && y < boardSizeY)
+                    if (y >= 0 && y < board.GetLength(1))
                     {
                         count = (board[x, y] == player) ? count + 1 : 0;
                         if (count >= 6) return true;
@@ -88,13 +81,13 @@ namespace Gomoku_AI.RuleModels
                 }
             }
 
-            for (int d = 0; d < boardSizeX + boardSizeY - 1; d++)
+            for (int d = 0; d < board.GetLength(0) + board.GetLength(1) - 1; d++)
             {
                 int count = 0;
-                for (int x = 0; x < boardSizeX; x++)
+                for (int x = 0; x < board.GetLength(0); x++)
                 {
                     int y = d - x;
-                    if (y >= 0 && y < boardSizeY)
+                    if (y >= 0 && y < board.GetLength(1))
                     {
                         count = (board[x, y] == player) ? count + 1 : 0;
                         if (count >= 6) return true;
@@ -109,9 +102,9 @@ namespace Gomoku_AI.RuleModels
         {
             int openFours = 0;
 
-            for (int x = 0; x < boardSizeX; x++)
+            for (int x = 0; x < board.GetLength(0); x++)
             {
-                for (int y = 0; y <= boardSizeY - 4; y++)
+                for (int y = 0; y <= board.GetLength(1) - 4; y++)
                 {
                     bool sequence = true;
                     for (int i = 0; i < 4; i++)
@@ -125,7 +118,7 @@ namespace Gomoku_AI.RuleModels
                     if (sequence)
                     {
                         bool openLeft = (y - 1 >= 0) && (board[x, y - 1] == 0);
-                        bool openRight = (y + 4 < boardSizeY) && (board[x, y + 4] == 0);
+                        bool openRight = (y + 4 < board.GetLength(1)) && (board[x, y + 4] == 0);
                         if (openLeft && openRight)
                         {
                             openFours++;
@@ -134,9 +127,9 @@ namespace Gomoku_AI.RuleModels
                 }
             }
 
-            for (int y = 0; y < boardSizeY; y++)
+            for (int y = 0; y < board.GetLength(1); y++)
             {
-                for (int x = 0; x <= boardSizeX - 4; x++)
+                for (int x = 0; x <= board.GetLength(0) - 4; x++)
                 {
                     bool sequence = true;
                     for (int i = 0; i < 4; i++)
@@ -150,7 +143,7 @@ namespace Gomoku_AI.RuleModels
                     if (sequence)
                     {
                         bool openTop = (x - 1 >= 0) && (board[x - 1, y] == 0);
-                        bool openBottom = (x + 4 < boardSizeX) && (board[x + 4, y] == 0);
+                        bool openBottom = (x + 4 < board.GetLength(0)) && (board[x + 4, y] == 0);
                         if (openTop && openBottom)
                         {
                             openFours++;
@@ -159,9 +152,9 @@ namespace Gomoku_AI.RuleModels
                 }
             }
 
-            for (int x = 0; x <= boardSizeX - 4; x++)
+            for (int x = 0; x <= board.GetLength(0) - 4; x++)
             {
-                for (int y = 0; y <= boardSizeY - 4; y++)
+                for (int y = 0; y <= board.GetLength(1) - 4; y++)
                 {
                     bool sequence = true;
                     for (int i = 0; i < 4; i++)
@@ -175,7 +168,7 @@ namespace Gomoku_AI.RuleModels
                     if (sequence)
                     {
                         bool openStart = (x - 1 >= 0) && (y - 1 >= 0) && (board[x - 1, y - 1] == 0);
-                        bool openEnd = (x + 4 < boardSizeX) && (y + 4 < boardSizeY) && (board[x + 4, y + 4] == 0);
+                        bool openEnd = (x + 4 < board.GetLength(0)) && (y + 4 < board.GetLength(1)) && (board[x + 4, y + 4] == 0);
                         if (openStart && openEnd)
                         {
                             openFours++;
@@ -184,9 +177,9 @@ namespace Gomoku_AI.RuleModels
                 }
             }
 
-            for (int x = 0; x <= boardSizeX - 4; x++)
+            for (int x = 0; x <= board.GetLength(0) - 4; x++)
             {
-                for (int y = 3; y < boardSizeY; y++)
+                for (int y = 3; y < board.GetLength(1); y++)
                 {
                     bool sequence = true;
                     for (int i = 0; i < 4; i++)
@@ -199,8 +192,8 @@ namespace Gomoku_AI.RuleModels
                     }
                     if (sequence)
                     {
-                        bool openStart = (x - 1 >= 0) && (y + 1 < boardSizeY) && (board[x - 1, y + 1] == 0);
-                        bool openEnd = (x + 4 < boardSizeX) && (y - 4 >= 0) && (board[x + 4, y - 4] == 0);
+                        bool openStart = (x - 1 >= 0) && (y + 1 < board.GetLength(1)) && (board[x - 1, y + 1] == 0);
+                        bool openEnd = (x + 4 < board.GetLength(0)) && (y - 4 >= 0) && (board[x + 4, y - 4] == 0);
                         if (openStart && openEnd)
                         {
                             openFours++;
@@ -216,9 +209,9 @@ namespace Gomoku_AI.RuleModels
         {
             int openThrees = 0;
 
-            for (int x = 0; x < boardSizeX; x++)
+            for (int x = 0; x < board.GetLength(0); x++)
             {
-                for (int y = 0; y <= boardSizeY - 3; y++)
+                for (int y = 0; y <= board.GetLength(1) - 3; y++)
                 {
                     bool sequence = true;
                     for (int i = 0; i < 3; i++)
@@ -232,7 +225,7 @@ namespace Gomoku_AI.RuleModels
                     if (sequence)
                     {
                         bool openLeft = (y - 1 >= 0) && (board[x, y - 1] == 0);
-                        bool openRight = (y + 3 < boardSizeY) && (board[x, y + 3] == 0);
+                        bool openRight = (y + 3 < board.GetLength(1)) && (board[x, y + 3] == 0);
                         if (openLeft && openRight)
                         {
                             openThrees++;
@@ -241,9 +234,9 @@ namespace Gomoku_AI.RuleModels
                 }
             }
 
-            for (int y = 0; y < boardSizeY; y++)
+            for (int y = 0; y < board.GetLength(1); y++)
             {
-                for (int x = 0; x <= boardSizeX - 3; x++)
+                for (int x = 0; x <= board.GetLength(0) - 3; x++)
                 {
                     bool sequence = true;
                     for (int i = 0; i < 3; i++)
@@ -257,7 +250,7 @@ namespace Gomoku_AI.RuleModels
                     if (sequence)
                     {
                         bool openTop = (x - 1 >= 0) && (board[x - 1, y] == 0);
-                        bool openBottom = (x + 3 < boardSizeX) && (board[x + 3, y] == 0);
+                        bool openBottom = (x + 3 < board.GetLength(0)) && (board[x + 3, y] == 0);
                         if (openTop && openBottom)
                         {
                             openThrees++;
@@ -266,9 +259,9 @@ namespace Gomoku_AI.RuleModels
                 }
             }
 
-            for (int x = 0; x <= boardSizeX - 3; x++)
+            for (int x = 0; x <= board.GetLength(0) - 3; x++)
             {
-                for (int y = 0; y <= boardSizeY - 3; y++)
+                for (int y = 0; y <= board.GetLength(1) - 3; y++)
                 {
                     bool sequence = true;
                     for (int i = 0; i < 3; i++)
@@ -282,7 +275,7 @@ namespace Gomoku_AI.RuleModels
                     if (sequence)
                     {
                         bool openStart = (x - 1 >= 0) && (y - 1 >= 0) && (board[x - 1, y - 1] == 0);
-                        bool openEnd = (x + 3 < boardSizeX) && (y + 3 < boardSizeY) && (board[x + 3, y + 3] == 0);
+                        bool openEnd = (x + 3 < board.GetLength(0)) && (y + 3 < board.GetLength(1)) && (board[x + 3, y + 3] == 0);
                         if (openStart && openEnd)
                         {
                             openThrees++;
@@ -291,9 +284,9 @@ namespace Gomoku_AI.RuleModels
                 }
             }
 
-            for (int x = 0; x <= boardSizeX - 3; x++)
+            for (int x = 0; x <= board.GetLength(0) - 3; x++)
             {
-                for (int y = 2; y < boardSizeY; y++)
+                for (int y = 2; y < board.GetLength(1); y++)
                 {
                     bool sequence = true;
                     for (int i = 0; i < 3; i++)
@@ -306,8 +299,8 @@ namespace Gomoku_AI.RuleModels
                     }
                     if (sequence)
                     {
-                        bool openStart = (x - 1 >= 0) && (y + 1 < boardSizeY) && (board[x - 1, y + 1] == 0);
-                        bool openEnd = (x + 3 < boardSizeX) && (y - 3 >= 0) && (board[x + 3, y - 3] == 0);
+                        bool openStart = (x - 1 >= 0) && (y + 1 < board.GetLength(1)) && (board[x - 1, y + 1] == 0);
+                        bool openEnd = (x + 3 < board.GetLength(0)) && (y - 3 >= 0) && (board[x + 3, y - 3] == 0);
                         if (openStart && openEnd)
                         {
                             openThrees++;
@@ -345,18 +338,18 @@ namespace Gomoku_AI.RuleModels
             int nextX = startX + 3 * deltaX;
             int nextY = startY + 3 * deltaY;
 
-            bool isOpenLeft = prevX >= 0 && prevX < boardSizeX && prevY >= 0 && prevY < boardSizeY && board[prevX, prevY] == 0;
-            bool isOpenRight = nextX >= 0 && nextX < boardSizeX && nextY >= 0 && nextY < boardSizeY && board[nextX, nextY] == 0;
+            bool isOpenLeft = prevX >= 0 && prevX < board.GetLength(0) && prevY >= 0 && prevY < board.GetLength(1) && board[prevX, prevY] == 0;
+            bool isOpenRight = nextX >= 0 && nextX < board.GetLength(0) && nextY >= 0 && nextY < board.GetLength(1) && board[nextX, nextY] == 0;
 
             return isOpenLeft && isOpenRight;
         }
 
         private bool CheckRows(int[,] board, int player)
         {
-            for (int x = 0; x < boardSizeX; x++)
+            for (int x = 0; x < board.GetLength(0); x++)
             {
                 int count = 0;
-                for (int y = 0; y < boardSizeY; y++)
+                for (int y = 0; y < board.GetLength(1); y++)
                 {
                     count = (board[x, y] == player) ? count + 1 : 0;
                     if (count >= WinningCount) return true;
@@ -367,10 +360,10 @@ namespace Gomoku_AI.RuleModels
 
         private bool CheckColumns(int[,] board, int player)
         {
-            for (int y = 0; y < boardSizeY; y++)
+            for (int y = 0; y < board.GetLength(1); y++)
             {
                 int count = 0;
-                for (int x = 0; x < boardSizeX; x++)
+                for (int x = 0; x < board.GetLength(0); x++)
                 {
                     count = (board[x, y] == player) ? count + 1 : 0;
                     if (count >= WinningCount) return true;
@@ -381,9 +374,9 @@ namespace Gomoku_AI.RuleModels
 
         private bool CheckDiagonals(int[,] board, int player)
         {
-            for (int startX = 0; startX <= boardSizeX - WinningCount; startX++)
+            for (int startX = 0; startX <= board.GetLength(0) - WinningCount; startX++)
             {
-                for (int startY = 0; startY <= boardSizeY - WinningCount; startY++)
+                for (int startY = 0; startY <= board.GetLength(1) - WinningCount; startY++)
                 {
                     int count = 0;
                     for (int i = 0; i < WinningCount; i++)
@@ -409,9 +402,9 @@ namespace Gomoku_AI.RuleModels
 
         private bool CheckAntiDiagonals(int[,] board, int player)
         {
-            for (int startX = 0; startX <= boardSizeX - WinningCount; startX++)
+            for (int startX = 0; startX <= board.GetLength(0) - WinningCount; startX++)
             {
-                for (int startY = WinningCount - 1; startY < boardSizeY; startY++)
+                for (int startY = WinningCount - 1; startY < board.GetLength(1); startY++)
                 {
                     int count = 0;
                     for (int i = 0; i < WinningCount; i++)
