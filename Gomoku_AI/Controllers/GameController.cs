@@ -47,7 +47,7 @@ namespace Gomoku_AI.Controllers
                 });
             }
 
-            IRule ? rule = null;
+            IRule? rule = null;
             if (string.Equals(request.RuleType, "renju"))
             {
                 rule = new Renju();
@@ -66,7 +66,6 @@ namespace Gomoku_AI.Controllers
             var bestMove = logic.GetBestMove(board, currentPlayer);
 
             int[,] tmpBoard = new int[board.GetLength(0), board.GetLength(1)];
-
             for (int i = 0; i < board.GetLength(0); i++)
             {
                 for (int j = 0; j < board.GetLength(1); j++)
