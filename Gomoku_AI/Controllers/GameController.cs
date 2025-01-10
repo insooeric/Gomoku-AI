@@ -63,7 +63,7 @@ namespace Gomoku_AI.Controllers
                 return BadRequest(new { Message = "Invalid rule type." });
             }
 
-            var logic = new Logic(depth, rule);
+            var logic = new HMA_B_Logic(depth, rule);
             var bestMove = logic.GetBestMove(board, currentPlayer);
 
             int[,] tmpBoard = new int[board.GetLength(0), board.GetLength(1)];
