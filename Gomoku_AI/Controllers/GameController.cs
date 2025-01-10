@@ -13,7 +13,7 @@ namespace Gomoku_AI.Controllers
         [HttpPost("minimax-move")]
         public IActionResult GetMinimaxMove([FromBody] InputModel request)
         {
-
+            // optimizing stuffs
             int boardSizeX = request.Board.Count;
             int boardSizeY = request.Board[0].Count;
 
