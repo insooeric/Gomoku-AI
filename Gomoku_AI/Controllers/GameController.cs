@@ -10,6 +10,7 @@ namespace Gomoku_AI.Controllers
     [Route("api/gomoku")]
     public class GameController : ControllerBase
     {
+        // optimize stuffs
         [HttpPost("minimax-move")]
         public IActionResult GetMinimaxMove([FromBody] InputModel request)
         {
