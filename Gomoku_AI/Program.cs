@@ -7,7 +7,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalhost", policy =>
     {
-        policy.WithOrigins("https://insooeric.github.io")
+        policy.WithOrigins("https://insooeric.github.io", "http://localhost:5173")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .SetIsOriginAllowedToAllowWildcardSubdomains()
