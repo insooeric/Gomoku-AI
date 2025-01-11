@@ -83,7 +83,7 @@ namespace Gomoku_AI.Utilities
                     };
                 }
             }
-            int winner = CheckBoardStatus.CheckWinner(ListToArray.Convert(input.Board));
+            int winner = CheckBoardStatus.CheckWinner(BoardConverter.ListToArray(input.Board));
             int currentPlayer = (blackCount == whiteCount) ? 1 : -1;
             if (winner != 0)
             {
@@ -107,7 +107,7 @@ namespace Gomoku_AI.Utilities
                 }
             }
 
-            if(CheckBoardStatus.IsBoardFull(ListToArray.Convert(input.Board)))
+            if(CheckBoardStatus.IsBoardFull(BoardConverter.ListToArray(input.Board)))
             {
                 return new ResultModel
                 {

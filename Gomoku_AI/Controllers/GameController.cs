@@ -15,7 +15,7 @@ namespace Gomoku_AI.Controllers
         [HttpPost("minimax-move")]
         public IActionResult GetMinimaxMove([FromBody] InputModel request)
         {
-            int[,] board = ListToArray.Convert(request.Board);
+            int[,] board = Utilities.BoardConverter.ListToArray(request.Board);
             int currentPlayer = CurrentPlayer.Get(board);
 
             int depth = request.Depth;
@@ -121,7 +121,7 @@ namespace Gomoku_AI.Controllers
 
             
             // **Convert int[,] to Cell[,]**
-            var board = ListToArray.Convert(request.Board);
+            var board = Utilities.BoardConverter.ListToArray(request.Board);
             int currentPlayer = CurrentPlayer.Get(board);
 
             var validationResult = Validator.ValidateInput(request);
@@ -168,7 +168,7 @@ namespace Gomoku_AI.Controllers
                 return BadRequest(new {Message = "Invalid rule type."});
             }
 
-            var cellBoard = BoardConverter.ConvertIntToCell(board);
+            var cellBoard = Utilities.BoardConverter.ArrayToCell(board);
 
             var gameBoard = new Board(cellBoard);
 

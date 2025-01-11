@@ -120,6 +120,16 @@
             return false;
         }
 
+        public bool CreatesOpenTwo(int x, int y)
+        {
+
+            foreach (var (dx, dy) in Directions)
+            {
+
+            }
+            return false;
+        }
+
         private bool IsValid(int x, int y)
         {
             return x >= 0 && x < _board.Size && y >= 0 && y < _board.Size;
