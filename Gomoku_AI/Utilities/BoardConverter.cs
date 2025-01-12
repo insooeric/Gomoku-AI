@@ -17,7 +17,7 @@ namespace Gomoku_AI.Utilities
 
             return array;
         }
-        public static Cell[,] ArrayToCell(int[,] arrayBoard)
+/*        public static Cell[,] ArrayToCell(int[,] arrayBoard)
         {
             int sizeX = arrayBoard.GetLength(0);
             int sizeY = arrayBoard.GetLength(1);
@@ -37,6 +37,6 @@ namespace Gomoku_AI.Utilities
             }
 
             return cellBoard;
-        }
+        }*/
     }
 }

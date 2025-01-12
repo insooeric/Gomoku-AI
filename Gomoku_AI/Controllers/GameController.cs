@@ -119,118 +119,156 @@ namespace Gomoku_AI.Controllers
         public IActionResult GetMCTSMove([FromBody] InputModel request)
         {
 
-            
-            // **Convert int[,] to Cell[,]**
-            var board = Utilities.BoardConverter.ListToArray(request.Board);
-            int currentPlayer = CurrentPlayer.Get(board);
-
-            var validationResult = Validator.ValidateInput(request);
-
-            if(
-                validationResult.ErrorCode != Validator.ErrorCode.None &&
-                validationResult.ErrorCode != Validator.ErrorCode.InvalidGameStatus
-                )
+            try
             {
-                return BadRequest(new
+                var board = Utilities.BoardConverter.ListToArray(request.Board);
+                int currentPlayer = CurrentPlayer.Get(board);
+
+                var validationResult = Validator.ValidateInput(request);
+
+                if (
+                    validationResult.ErrorCode != Validator.ErrorCode.None &&
+                    validationResult.ErrorCode != Validator.ErrorCode.InvalidGameStatus
+                    )
                 {
-                    status = validationResult.Status,
-                    x = -1,
-                    y = -1,
-                    color = currentPlayer == 1 ? "Black" : "White",
-                    message = validationResult.Message
-                });
-            }
+                    return BadRequest(new
+                    {
+                        status = validationResult.Status,
+                        x = -1,
+                        y = -1,
+                        color = currentPlayer == 1 ? "Black" : "White",
+                        message = validationResult.Message
+                    });
+                }
 
-            if(validationResult.ErrorCode == Validator.ErrorCode.InvalidGameStatus)
-            {
-                return Ok(new
+                if (validationResult.ErrorCode == Validator.ErrorCode.InvalidGameStatus)
                 {
-                    status = validationResult.Status,
-                    x = -1,
-                    y = -1,
-                    color = currentPlayer == 1 ? "Black" : "White",
-                    message = validationResult.Message
-                });
-            }
+                    return Ok(new
+                    {
+                        status = validationResult.Status,
+                        x = -1,
+                        y = -1,
+                        color = currentPlayer == 1 ? "Black" : "White",
+                        message = validationResult.Message
+                    });
+                }
 
-            IRule? rule = null;
-            if(string.Equals(request.RuleType, "renju"))
-            {
-                rule = new Renju();
-            }
-            else if (string.Equals(request.RuleType, "freestyle"))
-            {
-                rule = new FreeStyle();
-            }
+                IRule? rule = null;
+                if (string.Equals(request.RuleType, "renju"))
+                {
+                    rule = new Renju();
+                }
+                else if (string.Equals(request.RuleType, "freestyle"))
+                {
+                    rule = new FreeStyle();
+                }
 
-            if(rule == null)
-            {
-                return BadRequest(new {Message = "Invalid rule type."});
-            }
+                if (rule == null)
+                {
+                    return BadRequest(new { Message = "Invalid rule type." });
+                }
 
-            var cellBoard = Utilities.BoardConverter.ArrayToCell(board);
+                // start from here
+                MCTS_Gomoku gameState = new MCTS_Gomoku(board, currentPlayer, rule);
 
-            var gameBoard = new Board(cellBoard);
+                int iterations = request.Depth > 0 ? request.Depth : 1000; // Default to 1000 if not specified
 
-            Cell currentPlayerValue = currentPlayer == 1 ? Cell.Black : Cell.White;
+                // Console.WriteLine($"Depth: {iterations}");
 
-            // Initialize the MovePrioritizer
-            var prioritizer = new MovePrioritizer(gameBoard, currentPlayerValue);
-            var prioritizedMoves = prioritizer.GetPrioritizedMoves();
+                MCTS_Logic mcts = new MCTS_Logic(iterations, explorationConstant: Math.Sqrt(2));
+                Move? bestMove = mcts.Search(gameState);
 
-            // If high-priority moves are found, select the first one
-            if (prioritizedMoves.Any())
-            {
-                var selectedMove = prioritizedMoves.First();
+                // Just In Case
+                if (bestMove == null)
+                {
+                    return Ok(new
+                    {
+                        status = "NoValidMoves",
+                        x = -1,
+                        y = -1,
+                        color = currentPlayer == 1 ? "Black" : "White",
+                        message = "No valid moves available."
+                    });
+                }
+
+
                 return Ok(new
                 {
                     status = "Playing",
-                    x = selectedMove.X,
-                    y = selectedMove.Y,
-                    color = currentPlayerValue == Cell.Black ? "Black" : "White",
+                    x = bestMove.Row,
+                    y = bestMove.Col,
+                    color = currentPlayer == 1 ? "Black" : "White",
                     message = "Playing"
                 });
             }
-
-            // If no high-priority moves, proceed with MCTS
-            var mcts = new MCTS(iterations: 1000, aiPlayer: currentPlayerValue);
-            var bestMove = mcts.FindBestMove(gameBoard);
-
-            // If MCTS couldn't find a move (shouldn't happen), choose a random available move
-            if (bestMove == null)
+            catch (Exception ex)
             {
-                var availableMoves = GetAvailableMoves(gameBoard);
-                if (availableMoves.Any())
-                    bestMove = availableMoves.First();
-                else
-                    return Ok(new
-                    {
-                        status = "Draw",
-                        x = -1,
-                        y = -1,
-                        color = currentPlayerValue == Cell.Black ? "Black" : "White",
-                        message = "Draw"
-                    });
+                return StatusCode(500, new
+                {
+                    status = "Error",
+                    x = -1,
+                    y = -1,
+                    color = "None",
+                    message = "An internal error occurred."
+                });
             }
 
-            return Ok(new
-            {
-                status = "Playing",
-                x = bestMove.X,
-                y = bestMove.Y,
-                color = currentPlayerValue == Cell.Black ? "Black" : "White",
-                message = "Playing"
-            });
         }
 
-        private List<Move> GetAvailableMoves(Board board)
-        {
-            var moves = new List<Move>();
-            for (int x = 0; x < board.Size; x++)
-                for (int y = 0; y < board.Size; y++)
-                    if (board.IsEmpty(x, y))
-                        moves.Add(new Move(x, y));
-            return moves;
-        }
+        // If high-priority moves are found, select the first one
+        /*            if (prioritizedMoves.Any())
+                    {
+                        var selectedMove = prioritizedMoves.First();
+                        return Ok(new
+                        {
+                            status = "Playing",
+                            x = selectedMove.X,
+                            y = selectedMove.Y,
+                            color = currentPlayerValue == Cell.Black ? "Black" : "White",
+                            debug = debugPlayer,
+                            message = "Playing"
+                        });
+                    }*/
+
+        // If no high-priority moves, proceed with MCTS
+        /*            var mcts = new MCTS(iterations: 1000, aiPlayer: currentPlayerValue);
+                    var bestMove = mcts.FindBestMove(gameBoard);
+
+                    // If MCTS couldn't find a move (shouldn't happen), choose a random available move
+                    if (bestMove == null)
+                    {
+                        var availableMoves = GetAvailableMoves(gameBoard);
+                        if (availableMoves.Any())
+                            bestMove = availableMoves.First();
+                        else
+                            return Ok(new
+                            {
+                                status = "Draw",
+                                x = -1,
+                                y = -1,
+                                color = currentPlayerValue == Cell.Black ? "Black" : "White",
+                                message = "Draw"
+                            });
+                    }
+
+                    return Ok(new
+                    {
+                        status = "Playing",
+                        x = bestMove.X,
+                        y = bestMove.Y,
+                        color = currentPlayerValue == Cell.Black ? "Black" : "White",
+                        debug = debugPlayer,
+                        message = "Playing"
+                    });*/
     }
+
+    /*        private List<Move> GetAvailableMoves(Board board)
+            {
+                var moves = new List<Move>();
+                for (int x = 0; x < board.Size; x++)
+                    for (int y = 0; y < board.Size; y++)
+                        if (board.IsEmpty(x, y))
+                            moves.Add(new Move(x, y));
+                return moves;
+            }*/
 }

@@ -2,13 +2,13 @@
 {
     public class Move
     {
-        public int X { get; set; }
-        public int Y { get; set; }
+        public int Row { get; set; }
+        public int Col { get; set; }
 
-        public Move(int x, int y)
+        public Move(int row, int col)
         {
-            X = x;
-            Y = y;
+            Row = row;
+            Col = col;
         }
     }
 

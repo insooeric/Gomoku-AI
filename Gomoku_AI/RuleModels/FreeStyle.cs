@@ -10,11 +10,26 @@
 
         public bool IsWinning(int[,] board, int player)
         {
-            return CheckRows(board, player) ||
-                   CheckColumns(board, player) ||
-                   CheckDiagonals(board, player) ||
-                   CheckAntiDiagonals(board, player);
+            bool hasWon = CheckRows(board, player) ||
+                          CheckColumns(board, player) ||
+                          CheckDiagonals(board, player) ||
+                          CheckAntiDiagonals(board, player);
+
+            if (hasWon)
+            {
+                // Console.WriteLine($"Player {player} has achieved a winning condition.");
+            }
+
+            return hasWon;
         }
+
+        /*        public bool IsWinning(int[,] board, int player)
+                {
+                    return CheckRows(board, player) ||
+                           CheckColumns(board, player) ||
+                           CheckDiagonals(board, player) ||
+                           CheckAntiDiagonals(board, player);
+                }*/
 
         private bool CheckRows(int[,] board, int player)
         {
