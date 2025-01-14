@@ -1,182 +1,15 @@
-﻿using System.Xml.Linq;
-
-namespace Gomoku_AI.AIModels.MCTS
+﻿namespace Gomoku_AI.AIModels.MCTS
 {
-    public class MCTS_Logic
+    public static class Prioritizer
     {
-        private readonly int Iterations;
-        private readonly double ExplorationConstant;
-        private static readonly Random rand = new Random();
-        private bool DebugMode = true;
-        private const int PriorityDepthDefault = 10;
-
-        public MCTS_Logic(int iterations = 3000, double explorationConstant = 1.414213562373095)
-        {
-            Iterations = iterations;
-            ExplorationConstant = explorationConstant;
-        }
-
-        public Move Search(MCTS_Gomoku rootState)
-        {
-            // Create the root node
-            MCTS_Node rootNode = new MCTS_Node(rootState);
-
-            // Main MCTS loop
-            for (int i = 0; i < Iterations; i++)
-            {
-                if (DebugMode)
-                {
-                    Console.WriteLine($"Iteration: {i}");
-                }
-                MCTS_Node node = rootNode;
-                MCTS_Gomoku state = rootState.Clone();
-
-                // 1) Selection
-                while (!node.IsTerminal() && node.IsFullyExpanded())
-                {
-                    node = node.SelectChild(ExplorationConstant);
-                    if (node.Move == null)
-                        break; // Should rarely happen if your tree logic is correct
-                    Console.WriteLine($"Applying Move Row={node.Move?.Row}, Col={node.Move?.Col}:");
-                    state.ApplyMove(node.Move);
-                }
-
-                // 2) Expansion
-                if (!node.IsTerminal())
-                {
-                    MCTS_Node child = node.Expand();
-                    if (child.Move == null)
-                        continue;
-                    state.ApplyMove(child.Move);
-                    node = child;
-                }
-
-                // 3) Simulation (heuristic or random)
-                int result = Simulate(state, maxDepth: 60, priorityDepth: PriorityDepthDefault);
-
-                if (DebugMode)
-                {
-                    Console.WriteLine($"Simulated Move: Row={node.Move?.Row} Col={node.Move?.Col}");
-                    Console.WriteLine($"Result after Simulation: {result}");
-                    Console.WriteLine("--------------------------------------------");
-                }
-
-
-                // 4) Backpropagation
-                while (node != null && node.Parent != null)
-                {
-                    node.Update(result);
-                    node = node.Parent;
-                }
-            }
-
-            // ------------------------------------------------
-            // Final Move Selection: never return null
-            // ------------------------------------------------
-
-            // 1) Prefer the child with the highest visits
-            MCTS_Node? bestChild = null;
-            int maxVisits = -1;
-            foreach (var c in rootNode.Children)
-            {
-                if (c.Visits > maxVisits)
-                {
-                    bestChild = c;
-                    maxVisits = c.Visits;
-                }
-            }
-
-            if (bestChild != null && bestChild.Move != null)
-            {
-                if (DebugMode)
-                {
-                    Console.WriteLine($"Best Move: Row={bestChild.Move.Row}, Col={bestChild.Move.Col}");
-                }
-                return bestChild.Move;
-            }
-            else if (rootNode.UntriedMoves.Count > 0)
-            {
-                Move fallback = rootNode.UntriedMoves[0];
-                if (DebugMode)
-                {
-                    Console.WriteLine($"Best Move (fallback untried): Row={fallback.Row}, Col={fallback.Col}");
-                }
-                return fallback;
-            }
-
-            throw new InvalidOperationException("No valid moves remain. The board is likely terminal.");
-        }
-
-        /*        private int SimulateHeuristic(MCTS_Gomoku state)
-                {
-                    int moveLimit = 60;  // limit the playout
-
-                    while (!state.IsGameOver() && moveLimit-- > 0)
-                    {
-                        var moves = state.GetPossibleMoves();
-                        if (moves.Count == 0) break;
-
-                        Move chosen = FindImmediateWinOrBlock(state, moves);
-                        if (chosen == null)
-                        {
-                            chosen = moves[rand.Next(moves.Count)];
-                        }
-
-                        state.ApplyMove(chosen);
-                    }
-
-                    return state.CheckWinner();
-                }*/
-
-        private int Simulate(MCTS_Gomoku state, int maxDepth = 60, int priorityDepth = 6)
-        {
-            int steps = 0;
-            while (!state.IsGameOver() && maxDepth-- > 0)
-            {
-                var moves = state.GetPossibleMoves();
-                if (moves.Count == 0)
-                    break;
-
-                // If we always have at least one move from PickPrioritizedMove, just pick it
-                var prioritized = Prioritizer.PickPrioritizedMove(state, moves);
-                Move chosen = prioritized[0];  // no fallback needed if we're guaranteed at least one
-
-                state.ApplyMove(chosen);
-                steps++;
-            }
-            return state.CheckWinner();
-        }
-
-
-
-
-
-        /*        private Move FindImmediateWinOrBlock(MCTS_Gomoku state, List<Move> moves)
-                {
-                    int player = state.CurrentPlayer;
-
-                    // 1) immediate win
-                    Move? win = FindImmediateWin(state, moves, player);
-                    if (win != null) return win;
-
-                    // 2) immediate block
-                    int opp = -player;
-                    Move? block = FindImmediateWin(state, moves, opp);
-                    if (block != null) return block;
-
-                    // else no immediate threat => return null so we pick random
-                    return null!;
-                }*/
-
-        // ----------------------------------------------------------------------
-        // Priority-based move selection with debug messages
-        // ----------------------------------------------------------------------
-        /*private Move? PickPrioritizedMove(MCTS_Gomoku state, List<Move> moves)
+        public static bool DebugMode = false;
+        public static List<Move> PickPrioritizedMove(MCTS_Gomoku state, List<Move> moves)
         {
             // Instead of the old "PickPrioritizedMove", we'll add debug lines 
             // each time we detect a pattern
 
             // 1) Immediate Win?
+            List<Move> prioritizedMoves = new List<Move>();
             var winningMove = FindImmediateWin(state, moves, state.CurrentPlayer);
             if (winningMove != null)
             {
@@ -184,7 +17,7 @@ namespace Gomoku_AI.AIModels.MCTS
                 {
                     Console.WriteLine($"Detected Pattern: IMMEDIATE WIN for player {state.CurrentPlayer}");
                 }
-                return winningMove;
+                return new List<Move> { winningMove };
             }
 
             // 2) Immediate Block Opponent’s Win?
@@ -195,10 +28,10 @@ namespace Gomoku_AI.AIModels.MCTS
                 {
                     Console.WriteLine($"Detected Pattern: BLOCK IMMEDIATE WIN for player {state.CurrentPlayer}");
                 }
-                return blockMove;
+                return new List<Move> { blockMove };
             }
 
-            // ----------------------------------------------------
+/*            // ----------------------------------------------------
             // Priority #1: Double 4s
             // ----------------------------------------------------
             var doubleFoursMove = FindDoubleFours(state, moves, state.CurrentPlayer, openOnly: true, requiredCount: 2);
@@ -450,25 +283,30 @@ namespace Gomoku_AI.AIModels.MCTS
                     Console.WriteLine("Detected Pattern: BLOCK Opponent's Semi-Open 2-Line");
                 }
                 return blockSemiOpenTwo;
-            }
+            }*/
 
             // ----------------------------------------------------
             // Fallback: near the opponent
             // ----------------------------------------------------
-            var nearOppMove = FindMoveNearOpponent(state, moves);
-            if (nearOppMove != null)
+            if(prioritizedMoves.Count == 0)
             {
-                if (DebugMode)
+                List<Move> nearOppMoves = FindMoveNearOpponent(state, moves);
+                if (nearOppMoves != null)
                 {
-                    Console.WriteLine("Fallback: nearOppMove");
+                    if (DebugMode)
+                    {
+                        Console.WriteLine("Fallback: nearOppMove");
+                    }
+                    return nearOppMoves;
                 }
-                return nearOppMove;
             }
+
+            return prioritizedMoves;
 
             // ----------------------------------------------------
             // Fallback: center
             // ----------------------------------------------------
-            var centerMove = FindCenterMove(state, moves);
+/*            var centerMove = FindCenterMove(state, moves);
             if (centerMove != null)
             {
                 if (DebugMode)
@@ -491,19 +329,40 @@ namespace Gomoku_AI.AIModels.MCTS
             }
 
             // No moves => terminal
-            return null;
+            return null;*/
         }
 
         private class LineCheckResult
         {
-            public int Count;      // contiguous stones
-            public bool OpenLeft;  // left end open?
-            public bool OpenRight; // right end open?
+            int Count;      // contiguous stones
+            bool OpenLeft;  // left end open?
+            bool OpenRight; // right end open?
+
+            public LineCheckResult(int Count, bool OpenLeft, bool OpenRight)
+            {
+                this.Count = Count;
+                this.OpenLeft = false;
+                this.OpenRight = false;
+            }
+
+            public int GetCount()
+            {
+                return Count;
+            }
+
+            public bool GetOpenLeft()
+            {
+                return OpenLeft;
+            }
+
+            public bool GetOpenRight()
+            {
+                return OpenRight;
+            }
         }
 
-        private LineCheckResult CheckLine(int[,] board, int row, int col, int player, int dr, int dc)
+        private static LineCheckResult CheckLine(int[,] board, int row, int col, int player, int dr, int dc)
         {
-            var result = new LineCheckResult();
 
             int rowCount = board.GetLength(0);
             int colCount = board.GetLength(1);
@@ -531,14 +390,19 @@ namespace Gomoku_AI.AIModels.MCTS
             }
             bool backwardOpen = (r >= 0 && r < rowCount && c >= 0 && c < colCount && board[r, c] == 0);
 
+            LineCheckResult result = new LineCheckResult(
+                forwardCount+backwardCount, 
+                forwardOpen, 
+                backwardOpen
+                );
             // Summation
-            result.Count = forwardCount + backwardCount;
+/*            result.Count = forwardCount + backwardCount;
             result.OpenLeft = forwardOpen;
-            result.OpenRight = backwardOpen;
+            result.OpenRight = backwardOpen;*/
             return result;
         }
 
-        private (int openCount, int semiOpenCount, int totalCount) CountLinesOfLengthX(int[,] board, int row, int col, int player, int X)
+        private static (int openCount, int semiOpenCount, int totalCount) CountLinesOfLengthX(int[,] board, int row, int col, int player, int X)
         {
             int openLines = 0;
             int semiOpenLines = 0;
@@ -553,11 +417,11 @@ namespace Gomoku_AI.AIModels.MCTS
                 var check = CheckLine(board, row, col, player, dr, dc);
 
                 // If we want EXACT X, use == X. If we want "X or more," use >= X.
-                if (check.Count == X)
+                if (check.GetCount() == X)
                 {
                     totalLines++;
-                    bool bothOpen = check.OpenLeft && check.OpenRight;
-                    bool oneOpen = check.OpenLeft ^ check.OpenRight; // XOR
+                    bool bothOpen = check.GetOpenLeft() && check.GetOpenRight();
+                    bool oneOpen = check.GetOpenLeft() ^ check.GetOpenRight(); // XOR
 
                     if (bothOpen) openLines++;
                     else if (oneOpen) semiOpenLines++;
@@ -569,7 +433,7 @@ namespace Gomoku_AI.AIModels.MCTS
             return (openLines, semiOpenLines, totalLines);
         }
 
-        private Move? FindImmediateWin(MCTS_Gomoku state, List<Move> moves, int player)
+        private static Move? FindImmediateWin(MCTS_Gomoku state, List<Move> moves, int player)
         {
             foreach (var move in moves)
             {
@@ -589,7 +453,7 @@ namespace Gomoku_AI.AIModels.MCTS
             return null;
         }
 
-        private Move? FindDoubleFours(MCTS_Gomoku state, List<Move> moves, int player, bool openOnly, int requiredCount)
+        private static Move? FindDoubleFours(MCTS_Gomoku state, List<Move> moves, int player, bool openOnly, int requiredCount)
         {
             foreach (var move in moves)
             {
@@ -610,7 +474,7 @@ namespace Gomoku_AI.AIModels.MCTS
             return null;
         }
 
-        private Move? FindDoubleThrees(MCTS_Gomoku state, List<Move> moves, int player, bool openOnly, int requiredCount)
+        private static Move? FindDoubleThrees(MCTS_Gomoku state, List<Move> moves, int player, bool openOnly, int requiredCount)
         {
             int[,] board = state.Board;
             foreach (var move in moves)
@@ -630,7 +494,7 @@ namespace Gomoku_AI.AIModels.MCTS
             return null;
         }
 
-        private Move? FindOpenFour(MCTS_Gomoku state, List<Move> moves, int player)
+        private static Move? FindOpenFour(MCTS_Gomoku state, List<Move> moves, int player)
         {
             int[,] board = state.Board;
             foreach (var move in moves)
@@ -650,7 +514,7 @@ namespace Gomoku_AI.AIModels.MCTS
             return null;
         }
 
-        private Move? FindMixedDoubleFour(MCTS_Gomoku state, List<Move> moves, int player)
+        private static Move? FindMixedDoubleFour(MCTS_Gomoku state, List<Move> moves, int player)
         {
             int[,] board = state.Board;
             foreach (var move in moves)
@@ -669,7 +533,7 @@ namespace Gomoku_AI.AIModels.MCTS
             return null;
         }
 
-        private Move? FindDouble3And4(MCTS_Gomoku state, List<Move> moves, int player)
+        private static Move? FindDouble3And4(MCTS_Gomoku state, List<Move> moves, int player)
         {
             int[,] board = state.Board;
             foreach (var move in moves)
@@ -690,7 +554,7 @@ namespace Gomoku_AI.AIModels.MCTS
             return null;
         }
 
-        private Move? Find4And4(MCTS_Gomoku state, List<Move> moves, int player)
+        private static Move? Find4And4(MCTS_Gomoku state, List<Move> moves, int player)
         {
             int[,] board = state.Board;
             foreach (var move in moves)
@@ -709,7 +573,7 @@ namespace Gomoku_AI.AIModels.MCTS
             return null;
         }
 
-        private Move? FindOpenThree(MCTS_Gomoku state, List<Move> moves, int player)
+        private static Move? FindOpenThree(MCTS_Gomoku state, List<Move> moves, int player)
         {
             int[,] board = state.Board;
             foreach (var move in moves)
@@ -727,7 +591,7 @@ namespace Gomoku_AI.AIModels.MCTS
             return null;
         }
 
-        private Move? FindSemiOpenFour(MCTS_Gomoku state, List<Move> moves, int player)
+        private static Move? FindSemiOpenFour(MCTS_Gomoku state, List<Move> moves, int player)
         {
             int[,] board = state.Board;
             foreach (var move in moves)
@@ -745,7 +609,7 @@ namespace Gomoku_AI.AIModels.MCTS
             return null;
         }
 
-        private Move? FindSemiOpenThree(MCTS_Gomoku state, List<Move> moves, int player)
+        private static Move? FindSemiOpenThree(MCTS_Gomoku state, List<Move> moves, int player)
         {
             int[,] board = state.Board;
             foreach (var move in moves)
@@ -763,7 +627,7 @@ namespace Gomoku_AI.AIModels.MCTS
             return null;
         }
 
-        private Move? FindOpenTwo(MCTS_Gomoku state, List<Move> moves, int player)
+        private static Move? FindOpenTwo(MCTS_Gomoku state, List<Move> moves, int player)
         {
             int[,] board = state.Board;
             foreach (var move in moves)
@@ -781,7 +645,7 @@ namespace Gomoku_AI.AIModels.MCTS
             return null;
         }
 
-        private Move? FindSemiOpenTwo(MCTS_Gomoku state, List<Move> moves, int player)
+        private static Move? FindSemiOpenTwo(MCTS_Gomoku state, List<Move> moves, int player)
         {
             int[,] board = state.Board;
             foreach (var move in moves)
@@ -799,7 +663,7 @@ namespace Gomoku_AI.AIModels.MCTS
             return null;
         }
 
-        private Move FindMoveNearOpponent(MCTS_Gomoku state, List<Move> moves)
+        private static List<Move> FindMoveNearOpponent(MCTS_Gomoku state, List<Move> moves)
         {
             if (moves.Count == 0)
                 throw new InvalidOperationException("No moves available (game over?).");
@@ -807,25 +671,28 @@ namespace Gomoku_AI.AIModels.MCTS
             int opponent = -state.CurrentPlayer;
 
             // Gather opponent positions
-            var opponentPositions = new List<(int row, int col)>();
+            var opponentPositions = new List<Move>();
             for (int r = 0; r < state.BoardRow; r++)
             {
                 for (int c = 0; c < state.BoardCol; c++)
                 {
                     if (state.Board[r, c] == opponent)
                     {
-                        opponentPositions.Add((r, c));
+                        opponentPositions.Add(new Move(r,c));
                     }
                 }
             }
 
             // If opponent has no stones, fallback to center
             if (opponentPositions.Count == 0)
-                return FindCenterMove(state, moves);
+            {
+                opponentPositions.Add(new Move(state.BoardRow / 2, state.BoardCol / 2));
+                return opponentPositions;
+            }
 
             // Pick the single closest move to any opponent stone
-            Move bestMove = moves[0];
-            double bestDist = double.MaxValue;
+            List<Move> bestMoves = moves;
+/*            double bestDist = double.MaxValue;
 
             foreach (var move in moves)
             {
@@ -839,11 +706,11 @@ namespace Gomoku_AI.AIModels.MCTS
                         bestMove = move;
                     }
                 }
-            }
-            return bestMove;
+            }*/
+            return bestMoves;
         }
 
-        private Move FindCenterMove(MCTS_Gomoku state, List<Move> moves)
+/*        private static Move FindCenterMove(MCTS_Gomoku state, List<Move> moves)
         {
             if (moves.Count == 0)
                 throw new InvalidOperationException("No moves available (game over?).");

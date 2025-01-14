@@ -173,10 +173,9 @@ namespace Gomoku_AI.Controllers
 
                 int iterations = request.Depth > 0 ? request.Depth : 1000; // Default to 1000 if not specified
 
-                // Console.WriteLine($"Depth: {iterations}");
-
+                Console.WriteLine($"Depth: {iterations}");
                 MCTS_Logic mcts = new MCTS_Logic(iterations, explorationConstant: Math.Sqrt(2));
-                Move? bestMove = mcts.Search(gameState);
+                Move bestMove = mcts.Search(gameState);
 
                 // Just In Case
                 if (bestMove == null)
@@ -187,7 +186,7 @@ namespace Gomoku_AI.Controllers
                         x = -1,
                         y = -1,
                         color = currentPlayer == 1 ? "Black" : "White",
-                        message = "No valid moves available."
+                        message = "This shouldn't happen."
                     });
                 }
 
@@ -212,63 +211,6 @@ namespace Gomoku_AI.Controllers
                     message = "An internal error occurred."
                 });
             }
-
         }
-
-        // If high-priority moves are found, select the first one
-        /*            if (prioritizedMoves.Any())
-                    {
-                        var selectedMove = prioritizedMoves.First();
-                        return Ok(new
-                        {
-                            status = "Playing",
-                            x = selectedMove.X,
-                            y = selectedMove.Y,
-                            color = currentPlayerValue == Cell.Black ? "Black" : "White",
-                            debug = debugPlayer,
-                            message = "Playing"
-                        });
-                    }*/
-
-        // If no high-priority moves, proceed with MCTS
-        /*            var mcts = new MCTS(iterations: 1000, aiPlayer: currentPlayerValue);
-                    var bestMove = mcts.FindBestMove(gameBoard);
-
-                    // If MCTS couldn't find a move (shouldn't happen), choose a random available move
-                    if (bestMove == null)
-                    {
-                        var availableMoves = GetAvailableMoves(gameBoard);
-                        if (availableMoves.Any())
-                            bestMove = availableMoves.First();
-                        else
-                            return Ok(new
-                            {
-                                status = "Draw",
-                                x = -1,
-                                y = -1,
-                                color = currentPlayerValue == Cell.Black ? "Black" : "White",
-                                message = "Draw"
-                            });
-                    }
-
-                    return Ok(new
-                    {
-                        status = "Playing",
-                        x = bestMove.X,
-                        y = bestMove.Y,
-                        color = currentPlayerValue == Cell.Black ? "Black" : "White",
-                        debug = debugPlayer,
-                        message = "Playing"
-                    });*/
     }
-
-    /*        private List<Move> GetAvailableMoves(Board board)
-            {
-                var moves = new List<Move>();
-                for (int x = 0; x < board.Size; x++)
-                    for (int y = 0; y < board.Size; y++)
-                        if (board.IsEmpty(x, y))
-                            moves.Add(new Move(x, y));
-                return moves;
-            }*/
 }

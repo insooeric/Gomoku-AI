@@ -1,4 +1,5 @@
 ﻿using Gomoku_AI.RuleModels;
+using Gomoku_AI.Utilities;
 using System.Xml.Linq;
 
 namespace Gomoku_AI.AIModels.MCTS
@@ -23,13 +24,17 @@ namespace Gomoku_AI.AIModels.MCTS
 
         public List<Move> GetPossibleMoves()
         {
-            // Implement move generation with rule considerations if necessary
             List<Move> moves = new List<Move>();
 
-            // Heuristic: consider empty cells adjacent to existing stones
-            bool[,] considered = new bool[BoardRow, BoardCol];
+            // Instead of dx, dy from {-1,0,1}, expand to {-2,-1,0,1,2}:
+            /*            int[] dx = { -2, -1, 0, 1, 2 };
+                        int[] dy = { -2, -1, 0, 1, 2 };*/
+
             int[] dx = { -1, 0, 1 };
             int[] dy = { -1, 0, 1 };
+
+            bool[,] considered = new bool[BoardRow, BoardCol];
+            bool boardIsEmpty = true;
 
             for (int x = 0; x < BoardRow; x++)
             {
@@ -37,6 +42,8 @@ namespace Gomoku_AI.AIModels.MCTS
                 {
                     if (Board[x, y] != 0)
                     {
+                        boardIsEmpty = false;
+                        // Consider neighbors within 2 steps
                         foreach (var deltaX in dx)
                         {
                             foreach (var deltaY in dy)
@@ -54,23 +61,29 @@ namespace Gomoku_AI.AIModels.MCTS
                 }
             }
 
-            // If the board is empty, return the center
-            if (moves.Count == 0)
+            // If board is completely empty, you can place multiple 'center-ish' moves
+            if (boardIsEmpty)
             {
-                int centerRow = BoardRow / 2;
-                int centerCol = BoardCol / 2;
-                moves.Add(new Move(centerRow, centerCol));
-            }
-
-            // Logging for debugging
-            // Console.WriteLine("Generated Possible Moves:");
-            foreach (var move in moves)
-            {
-                // Console.WriteLine($"Row: {move.Row}, Col: {move.Col}");
+                // e.g., put a small cluster of possible center moves
+                int cR = BoardRow / 2;
+                int cC = BoardCol / 2;
+                for (int i = -1; i <= 1; i++)
+                {
+                    for (int j = -1; j <= 1; j++)
+                    {
+                        int r = cR + i;
+                        int c = cC + j;
+                        if (IsInside(r, c))
+                        {
+                            moves.Add(new Move(r, c));
+                        }
+                    }
+                }
             }
 
             return moves;
         }
+
 
 
 

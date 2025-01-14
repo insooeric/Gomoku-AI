@@ -9,18 +9,30 @@
         public int Wins { get; private set; }
         public int Visits { get; private set; }
         public List<Move> UntriedMoves { get; private set; }
+        public int WhoMoved { get; private set; }
 
         private static readonly Random rand = new Random();
 
-        public MCTS_Node(MCTS_Gomoku state, MCTS_Node? parent = null, Move? move = null)
+        public MCTS_Node(MCTS_Gomoku state, MCTS_Node? parent = null, Move? move = null, int maxChildren = 15)
         {
             State = state;
             Parent = parent;
             Move = move;
+            WhoMoved = (parent == null) ? state.CurrentPlayer : -state.CurrentPlayer;
             Children = new List<MCTS_Node>();
             Wins = 0;
             Visits = 0;
-            UntriedMoves = state.GetPossibleMoves();
+            // UntriedMoves = state.GetPossibleMoves();
+            var allMoves = state.GetPossibleMoves();
+            if (allMoves.Count > maxChildren)
+            {
+                // random sample
+                UntriedMoves = allMoves.OrderBy(x => rand.Next()).Take(maxChildren).ToList();
+            }
+            else
+            {
+                UntriedMoves = allMoves;
+            }
         }
 
         public bool IsFullyExpanded()
@@ -30,15 +42,36 @@
 
         public MCTS_Node Expand()
         {
-            // Select a move to expand
-            Move move = UntriedMoves[rand.Next(UntriedMoves.Count)];
+            // 1) Get prioritized moves from your new static method
+            //    This returns a List<Move>, but you can decide whether 
+            //    to pick the first or pick from that list in some way:
+            var prioritized = Prioritizer.PickPrioritizedMove(State, UntriedMoves);
+
+            Move move;
+            if (prioritized.Count > 0)
+            {
+                // e.g. pick the first from the prioritized list
+                move = prioritized[0];
+            }
+            else
+            {
+                // fallback if no priority found
+                move = UntriedMoves[rand.Next(UntriedMoves.Count)];
+            }
+
             MCTS_Gomoku nextState = State.Clone();
             nextState.ApplyMove(move);
+
+            // create child node
             MCTS_Node child = new MCTS_Node(nextState, this, move);
             Children.Add(child);
+
+            // remove from untried
             UntriedMoves.Remove(move);
             return child;
         }
+
+
 
         public MCTS_Node SelectChild(double cParam = 1.414213562373095)
         {
@@ -62,7 +95,10 @@
 
         public void Update(int result)
         {
-            Visits++;
+            if (result == WhoMoved)
+            {
+                Wins++;
+            }
             // If the result is a win for the player who just moved, count it as a win
             if (result == -State.CurrentPlayer) // Because CurrentPlayer was switched after the move
                 Wins++;
