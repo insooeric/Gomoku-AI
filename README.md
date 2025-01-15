@@ -1,4 +1,5 @@
-# Gomoku-AI (Hey, I need to modify this)
+# Gomoku-AI 
+(Hey, I need to modify this)
 
 This project implements a Gomoku (also known as Five in a Row) game AI with **Renju** rules using the **Minimax** algorithm for move evaluation and selection.
 
