@@ -208,7 +208,7 @@ namespace Gomoku_AI.Controllers
                     x = -1,
                     y = -1,
                     color = "None",
-                    message = "An internal error occurred."
+                    message = $"An internal error occurred. {ex.Message}"
                 });
             }
         }

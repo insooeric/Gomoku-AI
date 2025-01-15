@@ -11,6 +11,7 @@ namespace Gomoku_AI.AIModels.MCTS
         public int BoardCol;
         public int CurrentPlayer;
         public IRule _rule;
+        private bool Debug = true;
 
         public MCTS_Gomoku(int[,] board, int currentPlayer, IRule rule)
         {
@@ -80,6 +81,14 @@ namespace Gomoku_AI.AIModels.MCTS
                     }
                 }
             }
+
+/*            foreach (var move in moves)
+            {
+                if (Debug)
+                {
+                    Console.WriteLine($"Possible Move: Row {move.Row}, Col {move.Col}");
+                }
+            }*/
 
             return moves;
         }

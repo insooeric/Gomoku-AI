@@ -2,12 +2,16 @@
 {
     public static class Prioritizer
     {
-        public static bool DebugMode = false;
+        public static bool DebugMode = true;
         public static List<Move> PickPrioritizedMove(MCTS_Gomoku state, List<Move> moves)
         {
             // Instead of the old "PickPrioritizedMove", we'll add debug lines 
             // each time we detect a pattern
 
+
+            // ----------------------------------------------------
+            // Priority #0: Instant winning move
+            // ----------------------------------------------------
             // 1) Immediate Win?
             List<Move> prioritizedMoves = new List<Move>();
             var winningMove = FindImmediateWin(state, moves, state.CurrentPlayer);
@@ -31,29 +35,36 @@
                 return new List<Move> { blockMove };
             }
 
-/*            // ----------------------------------------------------
+            // ----------------------------------------------------
             // Priority #1: Double 4s
             // ----------------------------------------------------
-            var doubleFoursMove = FindDoubleFours(state, moves, state.CurrentPlayer, openOnly: true, requiredCount: 2);
-            if (doubleFoursMove != null)
+            var doubleFoursMoves = FindDoubleFours(state, moves, state.CurrentPlayer, openOnly: true, requiredCount: 2);
+            if (doubleFoursMoves != null)
             {
-                if (DebugMode)
+                if (DebugMode && doubleFoursMoves.Count > 0)
                 {
-                    Console.WriteLine("Detected Pattern: Double 4s (Two Open 4-Lines)");
+                    Console.WriteLine($"Returning {doubleFoursMoves.Count} Double-Fours moves. (Row, Col) => ...");
+                    foreach (var m in doubleFoursMoves)
+                        Console.WriteLine($"    Double-Four Move: R={m.Row} C={m.Col}");
                 }
-                return doubleFoursMove;
+
+                return doubleFoursMoves;
             }
 
             var blockDoubleFours = FindDoubleFours(state, moves, -state.CurrentPlayer, openOnly: true, requiredCount: 2);
             if (blockDoubleFours != null)
             {
 
-                if (DebugMode)
+                if (DebugMode && blockDoubleFours.Count > 0)
                 {
-                    Console.WriteLine("Detected Pattern: BLOCK Opponent's Double 4s");
+                    Console.WriteLine($"Returning {blockDoubleFours.Count} Double-Fours moves. (Row, Col) => ...");
+                    foreach (var m in blockDoubleFours)
+                        Console.WriteLine($"    Double-Four Move: R={m.Row} C={m.Col}");
                 }
+
                 return blockDoubleFours;
             }
+            /*
 
             // ----------------------------------------------------
             // Priority #2: Double 3s
@@ -288,7 +299,9 @@
             // ----------------------------------------------------
             // Fallback: near the opponent
             // ----------------------------------------------------
-            if(prioritizedMoves.Count == 0)
+
+
+            if (prioritizedMoves.Count == 0)
             {
                 List<Move> nearOppMoves = FindMoveNearOpponent(state, moves);
                 if (nearOppMoves != null)
@@ -301,6 +314,16 @@
                 }
             }
 
+            // near the bottom
+            // If we reach here, either we have nearOppMoves or none
+            if (DebugMode && prioritizedMoves.Count == 0)
+            {
+                Console.WriteLine("Final fallback: return the full moves list");
+            }
+            if (prioritizedMoves.Count == 0)
+            {
+                return moves;
+            }
             return prioritizedMoves;
 
             // ----------------------------------------------------
@@ -332,42 +355,133 @@
             return null;*/
         }
 
-        private class LineCheckResult
+        /*        private class LineCheckResult
+                {
+                    int Count;      // contiguous stones
+                    bool OpenLeft;  // left end open?
+                    bool OpenRight; // right end open?
+
+                    public LineCheckResult(int Count, bool OpenLeft, bool OpenRight)
+                    {
+                        this.Count = Count;
+                        this.OpenLeft = false;
+                        this.OpenRight = false;
+                    }
+
+                    public int GetCount()
+                    {
+                        return Count;
+                    }
+
+                    public bool GetOpenLeft()
+                    {
+                        return OpenLeft;
+                    }
+
+                    public bool GetOpenRight()
+                    {
+                        return OpenRight;
+                    }
+                }
+
+                private static LineCheckResult CheckLine(int[,] board, int row, int col, int player, int dr, int dc)
+                {
+
+                    int rowCount = board.GetLength(0);
+                    int colCount = board.GetLength(1);
+
+                    // count forward
+                    int forwardCount = 0;
+                    int r = row, c = col;
+                    while (r >= 0 && r < rowCount && c >= 0 && c < colCount && board[r, c] == player)
+                    {
+                        forwardCount++;
+                        r += dr;
+                        c += dc;
+                    }
+                    bool forwardOpen = (r >= 0 && r < rowCount && c >= 0 && c < colCount && board[r, c] == 0);
+
+                    // count backward
+                    int backwardCount = 0;
+                    r = row - dr;
+                    c = col - dc;
+                    while (r >= 0 && r < rowCount && c >= 0 && c < colCount && board[r, c] == player)
+                    {
+                        backwardCount++;
+                        r -= dr;
+                        c -= dc;
+                    }
+                    bool backwardOpen = (r >= 0 && r < rowCount && c >= 0 && c < colCount && board[r, c] == 0);
+
+                    LineCheckResult result = new LineCheckResult(
+                        forwardCount+backwardCount, 
+                        forwardOpen, 
+                        backwardOpen
+                        );
+                    // Summation
+        *//*            result.Count = forwardCount + backwardCount;
+                    result.OpenLeft = forwardOpen;
+                    result.OpenRight = backwardOpen;*//*
+                    return result;
+                }*/
+
+
+        private static (int openCount, int semiOpenCount, int totalCount)
+            CountLinesOfLengthX(int[,] board, int row, int col, int player, int X)
         {
-            int Count;      // contiguous stones
-            bool OpenLeft;  // left end open?
-            bool OpenRight; // right end open?
+            int openLines = 0;
+            int semiOpenLines = 0;
+            int totalLines = 0;
 
-            public LineCheckResult(int Count, bool OpenLeft, bool OpenRight)
+            // The 4 principal directions to check
+            int[,] directions = new int[,]
             {
-                this.Count = Count;
-                this.OpenLeft = false;
-                this.OpenRight = false;
+        { 0, 1 },  // horizontal
+        { 1, 0 },  // vertical
+        { 1, 1 },  // diagonal down-right
+        { -1, 1 }  // diagonal up-right
+            };
+
+            for (int i = 0; i < directions.GetLength(0); i++)
+            {
+                int dr = directions[i, 0];
+                int dc = directions[i, 1];
+
+                var check = CheckLine(board, row, col, player, dr, dc);
+
+                // If exactly X contiguous stones (including the new stone)
+                if (check.Count >= X)
+                {
+                    totalLines++;
+                    bool bothOpen = check.OpenLeft && check.OpenRight;
+                    bool oneOpen = check.OpenLeft ^ check.OpenRight; // XOR
+
+                    if (bothOpen) openLines++;
+                    else if (oneOpen) semiOpenLines++;
+                }
             }
 
-            public int GetCount()
-            {
-                return Count;
-            }
-
-            public bool GetOpenLeft()
-            {
-                return OpenLeft;
-            }
-
-            public bool GetOpenRight()
-            {
-                return OpenRight;
-            }
+            return (openLines, semiOpenLines, totalLines);
         }
 
+        // Helper struct/class for CheckLine results
+        private class LineCheckResult
+        {
+            public int Count;
+            public bool OpenLeft;
+            public bool OpenRight;
+        }
+
+        /// <summary>
+        /// Counts how many contiguous stones for `player` along direction (dr, dc),
+        /// plus checks if either end is open (empty).
+        /// </summary>
         private static LineCheckResult CheckLine(int[,] board, int row, int col, int player, int dr, int dc)
         {
-
             int rowCount = board.GetLength(0);
             int colCount = board.GetLength(1);
 
-            // count forward
+            // 1) Count forward in (dr, dc)
             int forwardCount = 0;
             int r = row, c = col;
             while (r >= 0 && r < rowCount && c >= 0 && c < colCount && board[r, c] == player)
@@ -378,7 +492,7 @@
             }
             bool forwardOpen = (r >= 0 && r < rowCount && c >= 0 && c < colCount && board[r, c] == 0);
 
-            // count backward
+            // 2) Count backward in the opposite direction
             int backwardCount = 0;
             r = row - dr;
             c = col - dc;
@@ -390,50 +504,17 @@
             }
             bool backwardOpen = (r >= 0 && r < rowCount && c >= 0 && c < colCount && board[r, c] == 0);
 
-            LineCheckResult result = new LineCheckResult(
-                forwardCount+backwardCount, 
-                forwardOpen, 
-                backwardOpen
-                );
             // Summation
-/*            result.Count = forwardCount + backwardCount;
-            result.OpenLeft = forwardOpen;
-            result.OpenRight = backwardOpen;*/
-            return result;
-        }
-
-        private static (int openCount, int semiOpenCount, int totalCount) CountLinesOfLengthX(int[,] board, int row, int col, int player, int X)
-        {
-            int openLines = 0;
-            int semiOpenLines = 0;
-            int totalLines = 0;
-
-            int[,] directions = new int[,] { { 0, 1 }, { 1, 0 }, { 1, 1 }, { -1, 1 } };
-
-            for (int i = 0; i < directions.GetLength(0); i++)
+            return new LineCheckResult
             {
-                int dr = directions[i, 0];
-                int dc = directions[i, 1];
-                var check = CheckLine(board, row, col, player, dr, dc);
-
-                // If we want EXACT X, use == X. If we want "X or more," use >= X.
-                if (check.GetCount() == X)
-                {
-                    totalLines++;
-                    bool bothOpen = check.GetOpenLeft() && check.GetOpenRight();
-                    bool oneOpen = check.GetOpenLeft() ^ check.GetOpenRight(); // XOR
-
-                    if (bothOpen) openLines++;
-                    else if (oneOpen) semiOpenLines++;
-                }
-                // If you prefer "X or more," you could do:
-                // else if (check.Count >= X) { ... }
-            }
-
-            return (openLines, semiOpenLines, totalLines);
+                Count = forwardCount + backwardCount,
+                OpenLeft = forwardOpen,
+                OpenRight = backwardOpen
+            };
         }
 
-        private static Move? FindImmediateWin(MCTS_Gomoku state, List<Move> moves, int player)
+
+        public static Move? FindImmediateWin(MCTS_Gomoku state, List<Move> moves, int player)
         {
             foreach (var move in moves)
             {
@@ -453,215 +534,258 @@
             return null;
         }
 
-        private static Move? FindDoubleFours(MCTS_Gomoku state, List<Move> moves, int player, bool openOnly, int requiredCount)
+        public static List<Move> FindDoubleFours(
+            MCTS_Gomoku state,
+            List<Move> moves,
+            int player,
+            bool openOnly = true,
+            int requiredCount = 2)
         {
+            // We'll gather *all* moves that yield double fours
+            List<Move> result = new List<Move>();
+
             foreach (var move in moves)
             {
+                // Simulate placing the stone
                 state.Board[move.Row, move.Col] = player;
+
+                // Count how many lines of (at least) length 4
                 var (open4, semi4, total4) = CountLinesOfLengthX(state.Board, move.Row, move.Col, player, 4);
+
+                // Undo the stone
                 state.Board[move.Row, move.Col] = 0;
 
+                // If openOnly == true, we only consider open4
+                // If openOnly == false, we consider both open4 + semi4
                 int relevantCount = openOnly ? open4 : (open4 + semi4);
+
+                // If we have at least `requiredCount` (e.g., 2) lines of 4,
+                // it's a "double four" (or more).
                 if (relevantCount >= requiredCount)
                 {
-                    if (DebugMode)
+/*                    if (DebugMode)
                     {
-                        Console.WriteLine($"DEBUG: Move Row={move.Row}, Col={move.Col} creates Double 4s: open={open4}, semi={semi4}");
+                        Console.WriteLine(
+                            $"[DEBUG] DoubleFour: Move=({move.Row},{move.Col}) => " +
+                            $"open4={open4}, semi4={semi4}, total4={total4}");
+                    }*/
+                    result.Add(move);
+                }
+            }
+
+            return result;
+        }
+
+
+        /*        private static Move? FindDoubleFours(MCTS_Gomoku state, List<Move> moves, int player, bool openOnly, int requiredCount)
+                {
+                    foreach (var move in moves)
+                    {
+                        state.Board[move.Row, move.Col] = player;
+                        var (open4, semi4, total4) = CountLinesOfLengthX(state.Board, move.Row, move.Col, player, 4);
+                        state.Board[move.Row, move.Col] = 0;
+
+                        int relevantCount = openOnly ? open4 : (open4 + semi4);
+                        if (relevantCount >= requiredCount)
+                        {
+                            if (DebugMode)
+                            {
+                                Console.WriteLine($"DEBUG: Move Row={move.Row}, Col={move.Col} creates Double 4s: open={open4}, semi={semi4}");
+                            }
+                            return move;
+                        }
                     }
-                    return move;
-                }
-            }
-            return null;
-        }
+                    return null;
+                }*/
 
-        private static Move? FindDoubleThrees(MCTS_Gomoku state, List<Move> moves, int player, bool openOnly, int requiredCount)
-        {
-            int[,] board = state.Board;
-            foreach (var move in moves)
-            {
-                board[move.Row, move.Col] = player;
-                var (open3, semi3, total3) = CountLinesOfLengthX(board, move.Row, move.Col, player, 3);
-
-                int relevantCount = openOnly ? open3 : (open3 + semi3);
-
-                if (relevantCount >= requiredCount)
+        /*        private static Move? FindDoubleThrees(MCTS_Gomoku state, List<Move> moves, int player, bool openOnly, int requiredCount)
                 {
-                    board[move.Row, move.Col] = 0;
-                    return move;
+                    int[,] board = state.Board;
+                    foreach (var move in moves)
+                    {
+                        board[move.Row, move.Col] = player;
+                        var (open3, semi3, total3) = CountLinesOfLengthX(board, move.Row, move.Col, player, 3);
+
+                        int relevantCount = openOnly ? open3 : (open3 + semi3);
+
+                        if (relevantCount >= requiredCount)
+                        {
+                            board[move.Row, move.Col] = 0;
+                            return move;
+                        }
+                        board[move.Row, move.Col] = 0;
+                    }
+                    return null;
                 }
-                board[move.Row, move.Col] = 0;
-            }
-            return null;
-        }
 
-        private static Move? FindOpenFour(MCTS_Gomoku state, List<Move> moves, int player)
-        {
-            int[,] board = state.Board;
-            foreach (var move in moves)
-            {
-                board[move.Row, move.Col] = player;
-                var (open4, semi4, total4) = CountLinesOfLengthX(board, move.Row, move.Col, player, 4);
-
-                // If we have at least 1 open 4
-                if (open4 >= 1)
+                private static Move? FindOpenFour(MCTS_Gomoku state, List<Move> moves, int player)
                 {
-                    board[move.Row, move.Col] = 0;
-                    return move;
+                    int[,] board = state.Board;
+                    foreach (var move in moves)
+                    {
+                        board[move.Row, move.Col] = player;
+                        var (open4, semi4, total4) = CountLinesOfLengthX(board, move.Row, move.Col, player, 4);
+
+                        // If we have at least 1 open 4
+                        if (open4 >= 1)
+                        {
+                            board[move.Row, move.Col] = 0;
+                            return move;
+                        }
+
+                        board[move.Row, move.Col] = 0;
+                    }
+                    return null;
                 }
 
-                board[move.Row, move.Col] = 0;
-            }
-            return null;
-        }
-
-        private static Move? FindMixedDoubleFour(MCTS_Gomoku state, List<Move> moves, int player)
-        {
-            int[,] board = state.Board;
-            foreach (var move in moves)
-            {
-                board[move.Row, move.Col] = player;
-                var (open4, semi4, total4) = CountLinesOfLengthX(board, move.Row, move.Col, player, 4);
-
-                // One open + one semi-open => open4>=1 && semi4>=1
-                if (open4 >= 1 && semi4 >= 1)
+                private static Move? FindMixedDoubleFour(MCTS_Gomoku state, List<Move> moves, int player)
                 {
-                    board[move.Row, move.Col] = 0;
-                    return move;
+                    int[,] board = state.Board;
+                    foreach (var move in moves)
+                    {
+                        board[move.Row, move.Col] = player;
+                        var (open4, semi4, total4) = CountLinesOfLengthX(board, move.Row, move.Col, player, 4);
+
+                        // One open + one semi-open => open4>=1 && semi4>=1
+                        if (open4 >= 1 && semi4 >= 1)
+                        {
+                            board[move.Row, move.Col] = 0;
+                            return move;
+                        }
+                        board[move.Row, move.Col] = 0;
+                    }
+                    return null;
                 }
-                board[move.Row, move.Col] = 0;
-            }
-            return null;
-        }
 
-        private static Move? FindDouble3And4(MCTS_Gomoku state, List<Move> moves, int player)
-        {
-            int[,] board = state.Board;
-            foreach (var move in moves)
-            {
-                board[move.Row, move.Col] = player;
-
-                var (open3, semi3, total3) = CountLinesOfLengthX(board, move.Row, move.Col, player, 3);
-                var (open4, semi4, total4) = CountLinesOfLengthX(board, move.Row, move.Col, player, 4);
-
-                // 1 open-3 + 1 open-4
-                if (open3 >= 1 && open4 >= 1)
+                private static Move? FindDouble3And4(MCTS_Gomoku state, List<Move> moves, int player)
                 {
-                    board[move.Row, move.Col] = 0;
-                    return move;
+                    int[,] board = state.Board;
+                    foreach (var move in moves)
+                    {
+                        board[move.Row, move.Col] = player;
+
+                        var (open3, semi3, total3) = CountLinesOfLengthX(board, move.Row, move.Col, player, 3);
+                        var (open4, semi4, total4) = CountLinesOfLengthX(board, move.Row, move.Col, player, 4);
+
+                        // 1 open-3 + 1 open-4
+                        if (open3 >= 1 && open4 >= 1)
+                        {
+                            board[move.Row, move.Col] = 0;
+                            return move;
+                        }
+                        board[move.Row, move.Col] = 0;
+                    }
+                    return null;
                 }
-                board[move.Row, move.Col] = 0;
-            }
-            return null;
-        }
 
-        private static Move? Find4And4(MCTS_Gomoku state, List<Move> moves, int player)
-        {
-            int[,] board = state.Board;
-            foreach (var move in moves)
-            {
-                board[move.Row, move.Col] = player;
-                var (open4, semi4, total4) = CountLinesOfLengthX(board, move.Row, move.Col, player, 4);
-
-                // Need 2 or more total lines of length 4
-                if (total4 >= 2)
+                private static Move? Find4And4(MCTS_Gomoku state, List<Move> moves, int player)
                 {
-                    board[move.Row, move.Col] = 0;
-                    return move;
+                    int[,] board = state.Board;
+                    foreach (var move in moves)
+                    {
+                        board[move.Row, move.Col] = player;
+                        var (open4, semi4, total4) = CountLinesOfLengthX(board, move.Row, move.Col, player, 4);
+
+                        // Need 2 or more total lines of length 4
+                        if (total4 >= 2)
+                        {
+                            board[move.Row, move.Col] = 0;
+                            return move;
+                        }
+                        board[move.Row, move.Col] = 0;
+                    }
+                    return null;
                 }
-                board[move.Row, move.Col] = 0;
-            }
-            return null;
-        }
 
-        private static Move? FindOpenThree(MCTS_Gomoku state, List<Move> moves, int player)
-        {
-            int[,] board = state.Board;
-            foreach (var move in moves)
-            {
-                board[move.Row, move.Col] = player;
-                var (open3, semi3, total3) = CountLinesOfLengthX(board, move.Row, move.Col, player, 3);
-
-                if (open3 >= 1)
+                private static Move? FindOpenThree(MCTS_Gomoku state, List<Move> moves, int player)
                 {
-                    board[move.Row, move.Col] = 0;
-                    return move;
+                    int[,] board = state.Board;
+                    foreach (var move in moves)
+                    {
+                        board[move.Row, move.Col] = player;
+                        var (open3, semi3, total3) = CountLinesOfLengthX(board, move.Row, move.Col, player, 3);
+
+                        if (open3 >= 1)
+                        {
+                            board[move.Row, move.Col] = 0;
+                            return move;
+                        }
+                        board[move.Row, move.Col] = 0;
+                    }
+                    return null;
                 }
-                board[move.Row, move.Col] = 0;
-            }
-            return null;
-        }
 
-        private static Move? FindSemiOpenFour(MCTS_Gomoku state, List<Move> moves, int player)
-        {
-            int[,] board = state.Board;
-            foreach (var move in moves)
-            {
-                board[move.Row, move.Col] = player;
-                var (open4, semi4, total4) = CountLinesOfLengthX(board, move.Row, move.Col, player, 4);
-
-                if (semi4 >= 1)
+                private static Move? FindSemiOpenFour(MCTS_Gomoku state, List<Move> moves, int player)
                 {
-                    board[move.Row, move.Col] = 0;
-                    return move;
+                    int[,] board = state.Board;
+                    foreach (var move in moves)
+                    {
+                        board[move.Row, move.Col] = player;
+                        var (open4, semi4, total4) = CountLinesOfLengthX(board, move.Row, move.Col, player, 4);
+
+                        if (semi4 >= 1)
+                        {
+                            board[move.Row, move.Col] = 0;
+                            return move;
+                        }
+                        board[move.Row, move.Col] = 0;
+                    }
+                    return null;
                 }
-                board[move.Row, move.Col] = 0;
-            }
-            return null;
-        }
 
-        private static Move? FindSemiOpenThree(MCTS_Gomoku state, List<Move> moves, int player)
-        {
-            int[,] board = state.Board;
-            foreach (var move in moves)
-            {
-                board[move.Row, move.Col] = player;
-                var (open3, semi3, total3) = CountLinesOfLengthX(board, move.Row, move.Col, player, 3);
-
-                if (semi3 >= 1)
+                private static Move? FindSemiOpenThree(MCTS_Gomoku state, List<Move> moves, int player)
                 {
-                    board[move.Row, move.Col] = 0;
-                    return move;
+                    int[,] board = state.Board;
+                    foreach (var move in moves)
+                    {
+                        board[move.Row, move.Col] = player;
+                        var (open3, semi3, total3) = CountLinesOfLengthX(board, move.Row, move.Col, player, 3);
+
+                        if (semi3 >= 1)
+                        {
+                            board[move.Row, move.Col] = 0;
+                            return move;
+                        }
+                        board[move.Row, move.Col] = 0;
+                    }
+                    return null;
                 }
-                board[move.Row, move.Col] = 0;
-            }
-            return null;
-        }
 
-        private static Move? FindOpenTwo(MCTS_Gomoku state, List<Move> moves, int player)
-        {
-            int[,] board = state.Board;
-            foreach (var move in moves)
-            {
-                board[move.Row, move.Col] = player;
-                var (open2, semi2, total2) = CountLinesOfLengthX(board, move.Row, move.Col, player, 2);
-
-                if (open2 >= 1)
+                private static Move? FindOpenTwo(MCTS_Gomoku state, List<Move> moves, int player)
                 {
-                    board[move.Row, move.Col] = 0;
-                    return move;
+                    int[,] board = state.Board;
+                    foreach (var move in moves)
+                    {
+                        board[move.Row, move.Col] = player;
+                        var (open2, semi2, total2) = CountLinesOfLengthX(board, move.Row, move.Col, player, 2);
+
+                        if (open2 >= 1)
+                        {
+                            board[move.Row, move.Col] = 0;
+                            return move;
+                        }
+                        board[move.Row, move.Col] = 0;
+                    }
+                    return null;
                 }
-                board[move.Row, move.Col] = 0;
-            }
-            return null;
-        }
 
-        private static Move? FindSemiOpenTwo(MCTS_Gomoku state, List<Move> moves, int player)
-        {
-            int[,] board = state.Board;
-            foreach (var move in moves)
-            {
-                board[move.Row, move.Col] = player;
-                var (open2, semi2, total2) = CountLinesOfLengthX(board, move.Row, move.Col, player, 2);
-
-                if (semi2 >= 1)
+                private static Move? FindSemiOpenTwo(MCTS_Gomoku state, List<Move> moves, int player)
                 {
-                    board[move.Row, move.Col] = 0;
-                    return move;
-                }
-                board[move.Row, move.Col] = 0;
-            }
-            return null;
-        }
+                    int[,] board = state.Board;
+                    foreach (var move in moves)
+                    {
+                        board[move.Row, move.Col] = player;
+                        var (open2, semi2, total2) = CountLinesOfLengthX(board, move.Row, move.Col, player, 2);
+
+                        if (semi2 >= 1)
+                        {
+                            board[move.Row, move.Col] = 0;
+                            return move;
+                        }
+                        board[move.Row, move.Col] = 0;
+                    }
+                    return null;
+                }*/
 
         private static List<Move> FindMoveNearOpponent(MCTS_Gomoku state, List<Move> moves)
         {
