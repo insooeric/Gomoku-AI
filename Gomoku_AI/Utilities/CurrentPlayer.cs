@@ -18,9 +18,7 @@
                 }
             }
 
-            // Black starts first; if counts are equal, it's Black's turn; else, it's White's turn
             int currentPlayer = blackCount > whiteCount ? -1 : 1;
-            // Console.WriteLine($"Current Player: {(currentPlayer == 1 ? "Black" : "White")}");
             return currentPlayer;
         }
 

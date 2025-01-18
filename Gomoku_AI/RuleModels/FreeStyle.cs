@@ -92,5 +92,11 @@
             }
             return false;
         }
+
+        public IRule Clone()
+        {
+            // Since Renju is stateless, return a new instance
+            return new FreeStyle();
+        }
     }
 }

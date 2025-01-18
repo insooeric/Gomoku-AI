@@ -1,271 +1,375 @@
-﻿using Microsoft.OpenApi.Services;
-using System.Diagnostics;
-using System.Xml.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Gomoku_AI.RuleModels;
+using Gomoku_AI.Utilities;
 
 namespace Gomoku_AI.AIModels.MCTS
 {
     public class MCTS_Logic
     {
         private readonly int Iterations;
-        private readonly double ExplorationConstant;
-        private static readonly Random rand = new Random();
-        private bool DebugMode = true;
-        private const int PriorityDepthDefault = 10;
+        private readonly IRule Rule;
+        private static readonly double ExplorationConstant = Math.Sqrt(2);
+        private bool Debug = true;
+        private MCTS_Node RootNode = null;
+        private Random rand;
 
-        public MCTS_Logic(int iterations = 3000, double explorationConstant = 1.414213562373095)
+        public MCTS_Logic(int iterations, IRule rule)
         {
-            Iterations = iterations;
-            ExplorationConstant = explorationConstant;
+            this.Iterations = iterations;
+            this.Rule = rule;
+            this.rand = new Random();
         }
 
-        public Move Search(MCTS_Gomoku rootState)
+        public Move Search(int[,] board)
         {
-            // Create the root node
-            MCTS_Node rootNode = new MCTS_Node(rootState);
-
-            // Main MCTS loop
-            for (int i = 0; i < Iterations; i++)
+            try
             {
-                if (DebugMode)
+                if (Debug)
                 {
-                    Console.WriteLine($"Iteration: {i}");
-                }
-                MCTS_Node node = rootNode;
-                MCTS_Gomoku state = rootState.Clone();
-
-                // 1) Selection
-                while (!node.IsTerminal() && node.IsFullyExpanded())
-                {
-                    node = node.SelectChild(ExplorationConstant);
-                    if (DebugMode)
-                    {
-                        Console.WriteLine($"Selected Move: Row={node.Move?.Row}, Col={node.Move?.Col}");
-                    }
-                    /*                    if (node.Move == null)
-                                            break; // Should rarely happen if your tree logic is correct*/
-                    // Console.WriteLine($"Applying Move Row={node.Move?.Row}, Col={node.Move?.Col}:");
-                    if (node.Move != null)
-                    {
-                        state.ApplyMove(node.Move);
-                    }
+                    Console.WriteLine("\nSTARTING MCTS SEARCH");
+                    Console.WriteLine("---------------------------------------");
                 }
 
-                // 2) Expansion
-                if (!node.IsTerminal())
+                if (IsBoardEmpty(board))
                 {
-                    MCTS_Node child = node.Expand();
-                    if (child.Move == null)
+                    // Define the center move
+                    int centerRow = board.GetLength(0) / 2;
+                    int centerCol = board.GetLength(1) / 2;
+
+                    Move centerMove = new Move(centerRow, centerCol);
+
+                    if (Debug)
+                    {
+                        Console.WriteLine($"DEBUG: Board is empty. Returning center move ({centerMove.Row}, {centerMove.Col}).");
+                    }
+
+                    return centerMove;
+                }
+
+                if (RootNode == null)
+                {
+                    RootNode = new MCTS_Node(new Move(-1, -1), board, null);
+                }
+
+                // MCTS iteration
+                for (int i = 0; i < Iterations; i++)
+                {
+                    if (Debug)
+                    {
+                        Console.WriteLine($"Iteration #{i + 1}");
+                    }
+
+                    // 1. Selection
+                    MCTS_Node selectedNode = Selection(RootNode);
+
+                    if (selectedNode == null)
+                    {
+                        if (Debug)
+                        {
+                            Console.WriteLine("Selected node is null. Skipping iteration.");
+                        }
                         continue;
-                    state.ApplyMove(child.Move);
-                    node = child;
-                }
-
-                // 3) Simulation (heuristic or random)
-                int result = Simulate(state);//, maxDepth: 60);//, priorityDepth: PriorityDepthDefault);
-
-                /*                if (DebugMode)
-                                {
-                                    Console.WriteLine($"Simulated Move: Row={node.Move?.Row} Col={node.Move?.Col}");
-                                    Console.WriteLine($"Result after Simulation: {result}");
-                                    Console.WriteLine("--------------------------------------------");
-                                }*/
-
-
-                // 4) Backpropagation
-                while (node != null)
-                {
-                    node.Update(result);
-                    if (DebugMode)
-                    {
-                        Console.WriteLine($"[Backpropagation] Updated Node (Move: R={node.Move?.Row}, C={node.Move?.Col}) with result {result}");
                     }
-                    node = node.Parent;
+
+                    if (Debug)
+                    {
+                        Console.WriteLine($"Selected Node: Move=({selectedNode.Move.Row}, {selectedNode.Move.Col})");
+                    }
+
+                    // 2. Expansion
+                    MCTS_Node expandedNode = Expansion(selectedNode);
+
+                    // 3. Simulation
+                    int currentPlayer = CurrentPlayer.Get(expandedNode.BoardState);
+                    int simulationResult = Simulation(expandedNode.BoardState, currentPlayer);
+
+                    if (Debug)
+                    {
+                        Console.WriteLine($"Simulation Result: {(simulationResult == 1 ? "AI Win" : simulationResult == -1 ? "Opponent Win" : "Draw")}");
+                    }
+
+                    // 3. Backpropagation
+                    Backpropagation(expandedNode, simulationResult);
                 }
-                /*                while (node != null && node.Parent != null)
-                                {
-                                    node.Update(result);
-                                    node = node.Parent;
-                                }*/
+
+                return ChooseBestMove();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Exception in MCTS Search: {e.Message}");
+                return new Move(-1, -1); // Invalid move
+            }
+        }
+
+        private MCTS_Node Selection(MCTS_Node node)
+        {
+            MCTS_Node currentNode = node;
+
+            while (true)
+            {
+                if (!currentNode.GetChildren().Any())
+                {
+                    // Node has no children; return it for expansion
+                    return currentNode;
+                }
+
+                List<Move> possibleMoves = Prioritizer.PickPrioritizedMove(currentNode.BoardState, Rule);
+                List<Move> untriedMoves = possibleMoves.Where(move =>
+                    !currentNode.GetChildren().Any(child => child.Move.Equals(move))
+                ).ToList();
+
+                if (untriedMoves.Any())
+                {
+                    // Node has untried moves; return it for expansion
+                    return currentNode;
+                }
+
+                // Node is fully expanded; select the best child based on UCT
+                MCTS_Node selectedChild = currentNode.SelectChildWithHighestUCT(ExplorationConstant);
+
+                if (selectedChild == null)
+                {
+                    // No children to select; return current node
+                    return currentNode;
+                }
+
+                currentNode = selectedChild;
+            }
+        }
+
+        private MCTS_Node Expansion(MCTS_Node node)
+        {
+            if (node.IsTerminal)
+                return node; // No expansion needed for terminal nodes
+
+            List<Move> possibleMoves = Prioritizer.PickPrioritizedMove(node.BoardState, Rule);
+
+            // Filter out moves that have already been expanded
+            List<Move> untriedMoves = possibleMoves.Where(move =>
+                !node.GetChildren().Any(child => child.Move.Equals(move))
+            ).ToList();
+
+            if (!untriedMoves.Any())
+            {
+                node.SetExpanded(); // All moves have been tried
+                return node;
             }
 
+            // Select one untried move (randomly or based on priority)
+            Move moveToTry = untriedMoves[rand.Next(untriedMoves.Count)];
 
-            // ------------------------------------------------
-            // Final Move Selection: never return null
-            // ------------------------------------------------
+            // Apply the move to the board to get the new state
+            int[,] newBoard = CloneBoard(node.BoardState);
+            int currentPlayer = CurrentPlayer.Get(newBoard);
+            newBoard[moveToTry.Row, moveToTry.Col] = currentPlayer;
 
-            // 1) Prefer the child with the highest visits
-            MCTS_Node? bestChild = null;
-            int maxVisits = -1;
-            foreach (var c in rootNode.Children)
+            // Check if the move results in a win
+            bool isWin = Rule.IsWinning(newBoard, currentPlayer);
+
+            // Create a new child node for this move
+            MCTS_Node childNode = new MCTS_Node(moveToTry, newBoard, node)
             {
-                if (c.Visits > maxVisits)
-                {
-                    bestChild = c;
-                    maxVisits = c.Visits;
-                }
+                IsTerminal = isWin
+            };
+
+            // Add the child node to the current node
+            node.AddChild(childNode);
+
+            if (Debug)
+            {
+                Console.WriteLine($"DEBUG: Added child node ({moveToTry.Row}, {moveToTry.Col}), IsTerminal={childNode.IsTerminal}");
             }
 
-            if (bestChild != null && bestChild.Move != null)
+            return childNode;
+        }
+
+        private int Simulation(int[,] board, int currentPlayer)
+        {
+            int[,] simulationBoard = CloneBoard(board);
+            int player = currentPlayer;
+            int moveCount = 0;
+            int maxMoves = 60; // Prevent infinite simulations
+
+            while (moveCount < maxMoves)
             {
-                if (DebugMode)
+                List<Move> availableMoves = Prioritizer.PickPrioritizedMove(simulationBoard, Rule);
+                if (availableMoves.Count == 0)
                 {
-                    Console.WriteLine($"Best Move: Row={bestChild.Move.Row}, Col={bestChild.Move.Col}");
+                    if (Debug)
+                    {
+                        Console.WriteLine("DEBUG: Simulation ended in a Draw due to no available moves.");
+                    }
+                    return 0; // Draw
+                }
+
+                // Select a random move
+                Move randomMove = availableMoves[rand.Next(availableMoves.Count)];
+                simulationBoard[randomMove.Row, randomMove.Col] = player;
+                moveCount++;
+
+/*                if (Debug)
+                {
+                    Console.WriteLine($"DEBUG: Player {(player == 1 ? "Black" : "White")} placed at ({randomMove.Row}, {randomMove.Col}). Move Count: {moveCount}");
+                }*/
+                    
+
+                // Check for a win
+                if (Rule.IsWinning(simulationBoard, player))
+                {
+                    string winningPlayer = player == 1 ? "AI (Black)" : "Opponent (White)";
+                    if (Debug)
+                        Console.WriteLine($"DEBUG: {winningPlayer} wins the simulation.");
+
+                    return player == 1 ? 1 : -1; // 1 for AI win, -1 for Opponent win
+                }
+
+                // Correctly switch player
+                player = -player;
+            }
+
+            // If maxMoves reached without a win, declare a draw
+/*            if (Debug)
+            {
+                Console.WriteLine("DEBUG: Simulation ended in a Draw due to reaching maximum move limit.");
+            }*/
+
+            return 0; // Draw
+        }
+
+
+        private void Backpropagation(MCTS_Node node, int result)
+        {
+            MCTS_Node currentNode = node;
+            while (currentNode != null)
+            {
+                currentNode.IncrementVisits();
+
+                // We're only considering wins here.
+                if (result == 1)
+                {
+                    currentNode.AddWins(1);
+                    if (Debug)
+                    {
+                        Console.WriteLine($"DEBUG: Node ({currentNode.Move.Row}, {currentNode.Move.Col}) wins incremented by 1.");
+                    }
+                }
+                else if (result == -1)
+                {
+                    currentNode.AddWins(0);
+                    if (Debug)
+                    {
+                        Console.WriteLine($"DEBUG: Node ({currentNode.Move.Row}, {currentNode.Move.Col}) wins remain unchanged (Opponent Win).");
+                    }
+                }
+                else
+                {
+                    currentNode.AddWins(0);
+                    if (Debug)
+                    {
+                        Console.WriteLine($"DEBUG: Node ({currentNode.Move.Row}, {currentNode.Move.Col}) wins remain unchanged (Draw).");
+                    }
+                }
+
+                currentNode = currentNode.Parent;
+            }
+        }
+
+        private Move ChooseBestMove()
+        {
+            if (RootNode == null || !RootNode.GetChildren().Any())
+            {
+                return new Move(-1, -1); // No valid moves
+            }
+
+            // Select the child with the highest visit count
+            var bestChild = RootNode.GetChildren()
+                                     .OrderByDescending(child => child.Visits)
+                                     .FirstOrDefault();
+
+            if (bestChild != null)
+            {
+                if (Debug)
+                {
+                    Console.WriteLine("---------------------------------------");
+                    Console.WriteLine("Root's Immediate Children:");
+                    foreach (var child in RootNode.GetChildren())
+                    {
+                        Console.WriteLine($"Move: ({child.Move.Row}, {child.Move.Col}) - Visits: {child.Visits}, Wins: {child.Wins}");
+                    }
+                    PrintTreeStatistics();
+
+                    Console.WriteLine($"\nBest Move Selected: ({bestChild.Move.Row}, {bestChild.Move.Col}) with {bestChild.Visits} visits and {bestChild.Wins} wins.");
                 }
                 return bestChild.Move;
             }
-            else if (rootNode.UntriedMoves.Count > 0)
+
+            return new Move(-1, -1); // Default invalid move
+        }
+
+        private bool IsBoardEmpty(int[,] _board)
+        {
+            for (int row = 0; row < _board.GetLength(0); row++)
             {
-                Move fallback = rootNode.UntriedMoves[0];
-                if (DebugMode)
+                for (int col = 0; col < _board.GetLength(1); col++)
                 {
-                    Console.WriteLine($"Best Move (fallback untried): Row={fallback.Row}, Col={fallback.Col}");
+                    if (_board[row, col] != 0)
+                    {
+                        return false;
+                    }
                 }
-                return fallback;
             }
-
-            throw new InvalidOperationException("No valid moves remain. The board is likely terminal.");
-
-            // ------------------------------------------------
-            // Final Move Selection: never return null
-            // ------------------------------------------------
-
-            // 1) Prefer the child with the highest visits
-            /*            MCTS_Node? bestChild = null;
-                        int maxVisits = -1;
-                        foreach (var c in rootNode.Children)
-                        {
-                            if (c.Visits > maxVisits)
-                            {
-                                bestChild = c;
-                                maxVisits = c.Visits;
-                            }
-                        }
-
-                        if (bestChild != null && bestChild.Move != null)
-                        {
-                            if (DebugMode)
-                            {
-                                Console.WriteLine($"Best Move: Row={bestChild.Move.Row}, Col={bestChild.Move.Col}");
-                            }
-                            return bestChild.Move;
-                        }
-                        else if (rootNode.UntriedMoves.Count > 0)
-                        {
-                            Move fallback = rootNode.UntriedMoves[0];
-                            if (DebugMode)
-                            {
-                                Console.WriteLine($"Best Move (fallback untried): Row={fallback.Row}, Col={fallback.Col}");
-                            }
-                            return fallback;
-                        }
-
-                        throw new InvalidOperationException("No valid moves remain. The board is likely terminal.");*/
+            return true;
         }
 
-        /*        private int SimulateHeuristic(MCTS_Gomoku state)
-                {
-                    int moveLimit = 60;  // limit the playout
-
-                    while (!state.IsGameOver() && moveLimit-- > 0)
-                    {
-                        var moves = state.GetPossibleMoves();
-                        if (moves.Count == 0) break;
-
-                        Move chosen = FindImmediateWinOrBlock(state, moves);
-                        if (chosen == null)
-                        {
-                            chosen = moves[rand.Next(moves.Count)];
-                        }
-
-                        state.ApplyMove(chosen);
-                    }
-
-                    return state.CheckWinner();
-                }*/
-
-
-        /// <summary>
-        /// Simulates a random playout from the current board state until
-        /// the game is over or a maximum depth is reached.
-        /// Returns:
-        ///   1 if Black (player=1) eventually wins,
-        ///  -1 if White (player=-1) eventually wins,
-        ///   0 if neither wins by the end (draw).
-        /// </summary>
-        private int Simulate(MCTS_Gomoku state, int maxDepth = 60)
+        private int[,] CloneBoard(int[,] board)
         {
-            int steps = 0;
-            // Continue until the game ends or we reach a move-limit
-            while (!state.IsGameOver() && steps < maxDepth)
+            int rows = board.GetLength(0);
+            int cols = board.GetLength(1);
+            int[,] newBoard = new int[rows, cols];
+            for (int row = 0; row < rows; row++)
             {
-                var moves = state.GetPossibleMoves();
-                if (moves.Count == 0)
-                    break; // no moves => terminal
+                for (int col = 0; col < cols; col++)
+                {
+                    newBoard[row, col] = board[row, col];
+                }
+            }
+            return newBoard;
+        }
 
-                // Pick a random move from the available moves
-                //Move chosen = moves[rand.Next(moves.Count)];
-                Move chosen = ChooseStrategicMove(state, moves);
-                state.ApplyMove(chosen);
-
-                steps++;
+        /*----------------------------------------------------*
+         *              ⭐⭐⭐ FOR DEBUGGING ⭐⭐⭐              *
+         *----------------------------------------------------*/
+        private void PrintTreeStatistics()
+        {
+            if (RootNode == null)
+            {
+                Console.WriteLine("The MCTS tree is empty.");
+                return;
             }
 
-            // After we exit, check the winner:
-            //   1 => Black wins, -1 => White wins, 0 => no winner => "draw"
-            return state.CheckWinner();
+            Console.WriteLine("MCTS Tree Statistics:");
+            Console.WriteLine("---------------------------------------");
+            TraverseAndPrint(RootNode, 0);
         }
 
-        private Move ChooseStrategicMove(MCTS_Gomoku state, List<Move> moves)
+        private void TraverseAndPrint(MCTS_Node node, int depth)
         {
-            // 1. Check for immediate win
-            Move? winningMove = Prioritizer.FindImmediateWin(state, moves, state.CurrentPlayer);
-            if (winningMove != null)
-                return winningMove;
+            string indent = new string(' ', depth * 2);
+            string moveInfo = node.Move.Row == -1 && node.Move.Col == -1
+                ? "Root Node"
+                : $"Move: ({node.Move.Row}, {node.Move.Col})";
 
-            // 2. Check to block opponent's immediate win
-            Move? blockMove = Prioritizer.FindImmediateWin(state, moves, -state.CurrentPlayer);
-            if (blockMove != null)
-                return blockMove;
+            Console.WriteLine($"{indent}{moveInfo} - Visits: {node.Visits}, Wins: {node.Wins}");
 
-            // 3. Otherwise, pick a random move
-            return moves[rand.Next(moves.Count)];
+            foreach (var child in node.GetChildren())
+            {
+                TraverseAndPrint(child, depth + 1);
+            }
         }
-
-
-        /*        private int Simulate(MCTS_Gomoku state)//, int maxDepth = 60, int priorityDepth = 6)
-                {
-                    int steps = 0;
-                    while (!state.IsGameOver())// && maxDepth-- > 0)
-                    {
-                        var moves = state.GetPossibleMoves();
-                        if (moves.Count == 0)
-                            break;
-
-                        // If we always have at least one move from PickPrioritizedMove, just pick it
-                        var prioritized = Prioritizer.PickPrioritizedMove(state, moves);
-                        Move chosen;  // no fallback needed if we're guaranteed at least one
-                        if (prioritized.Count > 0)
-                        {
-                            // Use the first move or pick randomly among them
-                            chosen = prioritized[0];
-                        }
-                        else
-                        {
-                            // fallback – pick from all moves or random, or just break
-                            chosen = moves[rand.Next(moves.Count)];
-                        }
-
-
-                        state.ApplyMove(chosen);
-                        if (DebugMode)
-                        {
-                            Console.WriteLine($"Chosen Move: R={chosen.Row}, C={chosen.Col}");
-
-                        }
-
-                        steps++;
-                    }
-                    return state.CheckWinner();
-                }*/
+        /*----------------------------------------------------*
+         *            ⭐⭐⭐ FOR DEBUGGING END ⭐⭐⭐            *
+         *----------------------------------------------------*/
     }
 }

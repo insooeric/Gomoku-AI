@@ -17,26 +17,5 @@ namespace Gomoku_AI.Utilities
 
             return array;
         }
-/*        public static Cell[,] ArrayToCell(int[,] arrayBoard)
-        {
-            int sizeX = arrayBoard.GetLength(0);
-            int sizeY = arrayBoard.GetLength(1);
-            Cell[,] cellBoard = new Cell[sizeX, sizeY];
-
-            for (int x = 0; x < sizeX; x++)
-            {
-                for(int y = 0; y < sizeY; y++)
-                {
-                    cellBoard[x, y] = arrayBoard[x, y] switch
-                    {
-                        1 => Cell.Black,
-                        2 => Cell.White,
-                        _ => Cell.Empty
-                    };
-                }
-            }
-
-            return cellBoard;
-        }*/
     }
 }

@@ -41,7 +41,6 @@ namespace Gomoku_AI.RuleModels
             {
                 return true;
             }
-
             return false;
         }
 
@@ -426,6 +425,12 @@ namespace Gomoku_AI.RuleModels
                 }
             }
             return false;
+        }
+
+        public IRule Clone()
+        {
+            // Since Renju is stateless, return a new instance
+            return new Renju();
         }
     }
 }

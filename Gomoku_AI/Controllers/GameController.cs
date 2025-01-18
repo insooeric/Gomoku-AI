@@ -169,13 +169,8 @@ namespace Gomoku_AI.Controllers
                 }
 
                 // start from here
-                MCTS_Gomoku gameState = new MCTS_Gomoku(board, currentPlayer, rule);
-
-                int iterations = request.Depth > 0 ? request.Depth : 1000; // Default to 1000 if not specified
-
-                Console.WriteLine($"Depth: {iterations}");
-                MCTS_Logic mcts = new MCTS_Logic(iterations, explorationConstant: Math.Sqrt(2));
-                Move bestMove = mcts.Search(gameState);
+                MCTS_Logic mcts = new MCTS_Logic(request.Depth, rule);
+                Move bestMove = mcts.Search(board);
 
                 // Just In Case
                 if (bestMove == null)
