@@ -8,7 +8,7 @@ namespace Gomoku_AI.AIModels.MCTS
 {
     public static class Prioritizer
     {
-        private static bool Debug = false;
+        private static bool Debug = true;
 
         public static List<Move> PickPrioritizedMove(int[,] board, IRule rule)
         {
@@ -25,24 +25,30 @@ namespace Gomoku_AI.AIModels.MCTS
             }
 
             // Categorize move lists based on patterns
-/*            List<Move> immediateWins = new List<Move>();
-            List<Move> blockImmediateWins = new List<Move>();*/
-
             List<Move> createOpenFours = new List<Move>();
             List<Move> blockOpenFours = new List<Move>();
+
+            List<Move> createSemiOpenFours = new List<Move>();
+            List<Move> blockSemiOpenFours = new List<Move>();
 
             List<Move> createOpenThrees = new List<Move>();
             List<Move> blockOpenThrees = new List<Move>();
 
+            List<Move> createSemiOpenThrees = new List<Move>();
+            List<Move> blockSemiOpenThrees = new List<Move>();
+
             List<Move> createOpenTwos = new List<Move>();
             List<Move> blockOpenTwos = new List<Move>();
+
+            List<Move> createSemiOpenTwos = new List<Move>();
+            List<Move> blockSemiOpenTwos = new List<Move>();
 
             int currentPlayer = CurrentPlayer.Get(board);
             int opponentPlayer = -currentPlayer;
 
             if (Debug)
             {
-                Console.WriteLine("Prioritizing moves based on current strategy mode.");
+                Console.WriteLine("\nPrioritizing moves.");
             }
 
             // Iterate through all cells to categorize potential moves
@@ -53,16 +59,15 @@ namespace Gomoku_AI.AIModels.MCTS
                     if (board[row, col] == 0)
                     {
                         Move currentMove = new Move(row, col);
-                        if (Debug)
+/*                        if (Debug)
                         {
                             Console.WriteLine($"\nEvaluating Move: ({currentMove.Row},{currentMove.Col})");
-                        }
+                        }*/
 
                         // Immediate Win for AI
                         Move? winningMove = FindImmediateWin(board, rule, currentMove, currentPlayer);
                         if (winningMove != null)
                         {
-                            //immediateWins.Add(winningMove);
                             return new List<Move>() { winningMove };
                         }
 
@@ -70,181 +75,249 @@ namespace Gomoku_AI.AIModels.MCTS
                         Move? blockMove = FindImmediateWin(board, rule, currentMove, opponentPlayer);
                         if (blockMove != null)
                         {
-                            //blockImmediateWins.Add(blockMove);
                             return new List<Move>() { blockMove };
                         }
 
                         // Create Four for AI
-                        Move? openFourMove = FindFour(board, rule, currentMove, currentPlayer);
+                        Move? openFourMove = FindOpenFour(board, rule, currentMove, currentPlayer);
                         if (openFourMove != null)
                         {
                             createOpenFours.Add(openFourMove);
                         }
 
                         // Block Opponent's Four
-                        Move? blockOpenFourMove = FindFour(board, rule, currentMove, opponentPlayer);
+                        Move? blockOpenFourMove = FindOpenFour(board, rule, currentMove, opponentPlayer);
                         if (blockOpenFourMove != null)
                         {
                             blockOpenFours.Add(blockOpenFourMove);
                         }
 
-                        // Create Three for AI
-                        Move? openThreeMove = FindThree(board, rule, currentMove, currentPlayer);
-                        if (openThreeMove != null)
+                        Move? semiOpenFourMove = FindSemiOpenFour(board, rule, currentMove, currentPlayer);
+                        if (semiOpenFourMove != null)
+                        {
+                            createSemiOpenFours.Add(semiOpenFourMove);
+                        }
+
+                        Move? blockSemiOpenFourMove = FindSemiOpenFour(board, rule, currentMove, opponentPlayer);
+                        if (blockSemiOpenFourMove != null)
+                        {
+                            blockSemiOpenFours.Add(blockSemiOpenFourMove);
+                        }
+
+                        Move? openThreeMove = FindOpenThree(board, rule, currentMove, currentPlayer);
+                        if(openThreeMove != null)
                         {
                             createOpenThrees.Add(openThreeMove);
                         }
 
-                        // Block Opponent's Three
-                        Move? blockOpenThreeMove = FindThree(board, rule, currentMove, opponentPlayer);
-                        if (blockOpenThreeMove != null)
+                        Move? blockOpenThreeMove = FindOpenThree(board, rule, currentMove, opponentPlayer);
+                        if(blockOpenThreeMove != null)
                         {
                             blockOpenThrees.Add(blockOpenThreeMove);
                         }
 
-                        // Create Two for AI
-                        Move? openTwoMove = FindTwo(board, rule, currentMove, currentPlayer);
+                        Move? openSemiThreeMove = FindSemiOpenThree(board, rule, currentMove, currentPlayer);
+                        if (openSemiThreeMove != null)
+                        {
+                            createSemiOpenThrees.Add(openSemiThreeMove);
+                        }
+
+                        Move? blockSemiOpenThreeMove = FindSemiOpenThree(board, rule, currentMove, opponentPlayer);
+                        if (blockSemiOpenThreeMove != null)
+                        {
+                            blockSemiOpenThrees.Add(blockSemiOpenThreeMove);
+                        }
+
+                        Move? openTwoMove = FindOpenTwo(board, rule, currentMove, currentPlayer);
                         if (openTwoMove != null)
                         {
                             createOpenTwos.Add(openTwoMove);
                         }
 
-                        // Block Opponent's Two
-                        Move? blockTwoMove = FindTwo(board, rule, currentMove, opponentPlayer);
-                        if (blockTwoMove != null)
+                        Move? blockOpenTwoMove = FindOpenTwo(board, rule, currentMove, opponentPlayer);
+                        if (blockOpenTwoMove != null)
                         {
-                            blockOpenTwos.Add(blockTwoMove);
+                            blockOpenTwos.Add(blockOpenTwoMove);
+                        }
+
+                        Move? openSemiTwoMove = FindSemiOpenTwo(board, rule, currentMove, currentPlayer);
+                        if (openSemiTwoMove != null)
+                        {
+                            createSemiOpenTwos.Add(openSemiTwoMove);
+                        }
+
+                        Move? blockSemiOpenTwoMove = FindSemiOpenTwo(board, rule, currentMove, opponentPlayer);
+                        if (blockSemiOpenTwoMove != null)
+                        {
+                            blockSemiOpenTwos.Add(blockSemiOpenTwoMove);
                         }
                     }
                 }
             }
 
-            List<Move> availableMoves = new List<Move>();
-
-/*            // 1. Immediate Wins
-            if (immediateWins.Any())
-            {
-                if (Debug)
-                {
-                    Console.WriteLine("Attacking Mode: Immediate Wins");
-                    foreach (Move move in immediateWins)
-                    {
-                        Console.WriteLine($"Immediate Win: ({move.Row},{move.Col})");
-                    }
-                }
-                return immediateWins.Distinct().Take(2).ToList();
-            }
-
-            // 1. Block Immediate Wins
-            if (blockImmediateWins.Any())
-            {
-                if (Debug)
-                {
-                    Console.WriteLine("Defending Mode: Blocking Immediate Wins");
-                    foreach (Move move in blockImmediateWins)
-                    {
-                        Console.WriteLine($"Block Immediate Win: ({move.Row},{move.Col})");
-                    }
-                }
-                return blockImmediateWins.Distinct().Take(2).ToList();
-            }*/
-
-            // 2. Create Open Fours (to maintain offensive pressure while defending)
+            // Create Open Fours
             if (createOpenFours.Any())
             {
                 if (Debug)
                 {
-                    Console.WriteLine("Defending Mode: Creating Open Fours");
                     foreach (Move move in createOpenFours)
                     {
-                        Console.WriteLine($"Create Open Four: ({move.Row},{move.Col})");
+                        Console.WriteLine($"Create Open Four: ({move.Row},{move.Col}) for {currentPlayer}");
                     }
                 }
-                availableMoves.AddRange(createOpenFours.Distinct());
+                return createOpenFours.Distinct().ToList();
             }
 
-            // 3. Block Open Fours
+            // Block Open Fours
             if (blockOpenFours.Any())
             {
                 if (Debug)
                 {
-                    Console.WriteLine("Defending Mode: Blocking Open Fours");
                     foreach (Move move in blockOpenFours)
                     {
-                        Console.WriteLine($"Block Open Four: ({move.Row},{move.Col})");
+                        Console.WriteLine($"Block Open Four: ({move.Row},{move.Col}) for {opponentPlayer}");
                     }
                 }
-                availableMoves.AddRange(blockOpenFours.Distinct());
+                return blockOpenFours.Distinct().ToList();
             }
 
-            // 4. Create Open Threes
+            // Create Semi-Open Fours
+            if (createSemiOpenFours.Any())
+            {
+                if (Debug)
+                {
+                    foreach (Move move in createSemiOpenFours)
+                    {
+                        Console.WriteLine($"Create Semi-Open Four: ({move.Row},{move.Col}) for {currentPlayer}");
+                    }
+                }
+                return createSemiOpenFours.Distinct().ToList();
+            }
+
+            // Block Semi-Open Fours
+            if (blockSemiOpenFours.Any())
+            {
+                if (Debug)
+                {
+                    foreach (Move move in blockSemiOpenFours)
+                    {
+                        Console.WriteLine($"Block Semi-Open Four: ({move.Row},{move.Col}) for {opponentPlayer}");
+                    }
+                }
+                return blockSemiOpenFours.Distinct().ToList();
+            }
+
+            // Create Open Threes
             if (createOpenThrees.Any())
             {
                 if (Debug)
                 {
-                    Console.WriteLine("Defending Mode: Creating Open Threes");
                     foreach (Move move in createOpenThrees)
                     {
-                        Console.WriteLine($"Create Open Three: ({move.Row},{move.Col})");
+                        Console.WriteLine($"Create Open Three: ({move.Row},{move.Col}) for {currentPlayer}");
                     }
                 }
-                availableMoves.AddRange(createOpenThrees.Distinct());
+                return createOpenThrees.Distinct().ToList();
             }
 
-            // 5. Block Open Threes
+            // Block Open Threes
             if (blockOpenThrees.Any())
             {
                 if (Debug)
                 {
-                    Console.WriteLine("Defending Mode: Blocking Open Threes");
                     foreach (Move move in blockOpenThrees)
                     {
-                        Console.WriteLine($"Block Open Three: ({move.Row},{move.Col})");
+                        Console.WriteLine($"Block Open Three: ({move.Row},{move.Col}) for {opponentPlayer}");
                     }
                 }
-                availableMoves.AddRange(blockOpenThrees.Distinct());
+                return blockOpenThrees.Distinct().ToList();
             }
 
-            // 6. Create Open Twos
+            // Create Semi-Open Threes
+            if (createSemiOpenThrees.Any())
+            {
+                if (Debug)
+                {
+                    foreach (Move move in createSemiOpenThrees)
+                    {
+                        Console.WriteLine($"Create Semi-Open Three: ({move.Row},{move.Col}) for {currentPlayer}");
+                    }
+                }
+                return createSemiOpenThrees.Distinct().ToList();
+            }
+
+            // Block Semi-Open Threes
+            if (blockSemiOpenThrees.Any())
+            {
+                if (Debug)
+                {
+                    foreach (Move move in blockSemiOpenThrees)
+                    {
+                        Console.WriteLine($"Block Semi-Open Three: ({move.Row},{move.Col}) for {opponentPlayer}");
+                    }
+                }
+                return blockSemiOpenThrees.Distinct().ToList();
+            }
+
+            // Create Open Twos
             if (createOpenTwos.Any())
             {
                 if (Debug)
                 {
-                    Console.WriteLine("Defending Mode: Creating Open Twos");
                     foreach (Move move in createOpenTwos)
                     {
-                        Console.WriteLine($"Create Open Two: ({move.Row},{move.Col})");
+                        Console.WriteLine($"Create Open Twos: ({move.Row},{move.Col}) for {currentPlayer}");
                     }
                 }
-                availableMoves.AddRange(createOpenTwos.Distinct());
+                return createOpenTwos.Distinct().ToList();
             }
-
-            // 7. Block Open Twos
+            // Block Open Twos
             if (blockOpenTwos.Any())
             {
                 if (Debug)
                 {
-                    Console.WriteLine("Defending Mode: Blocking Open Twos");
                     foreach (Move move in blockOpenTwos)
                     {
-                        Console.WriteLine($"Block Open Two: ({move.Row},{move.Col})");
+                        Console.WriteLine($"Block Open Twos: ({move.Row},{move.Col}) for {opponentPlayer}");
                     }
                 }
-                availableMoves.AddRange(blockOpenTwos.Distinct());
+                return blockOpenTwos.Distinct().ToList();
             }
 
-            // If no prioritized moves found based on current mode, default to all available moves
-            if (availableMoves.Any())
+            // Create Semi-Open Twos
+            if (createSemiOpenTwos.Any())
             {
                 if (Debug)
                 {
-                    Console.WriteLine("Returning prioritized available moves based on strategy mode.");
+                    foreach (Move move in createSemiOpenTwos)
+                    {
+                        Console.WriteLine($"Create Semi-Open Twos: ({move.Row},{move.Col}) for {currentPlayer}");
+                    }
                 }
-                return availableMoves.Distinct().Take(10).ToList(); // Limit to top 10 moves
+                return createSemiOpenTwos.Distinct().ToList();
             }
 
-            // return centermove as default
-            return new List<Move>() { new Move(board.GetLength(0)/2, board.GetLength(1)/2) };
+            // Block Semi-Open Twos
+            if (blockSemiOpenTwos.Any())
+            {
+                if (Debug)
+                {
+                    foreach (Move move in blockSemiOpenTwos)
+                    {
+                        Console.WriteLine($"Block Semi-Open Twos: ({move.Row},{move.Col}) for {opponentPlayer}\n");
+                    }
+                }
+                return blockSemiOpenTwos.Distinct().ToList();
+            }
+            /*
+             * if we hit this point, it means none of the moves with existing stones 
+             * leads to winning.
+             * So, we need to find move that makes 5 rows.
+             */
+
+            // this shouldn't happen
+            BoardVisualizer.PrintBoard(board);
+            throw new NotImplementedException();
         }
 
         private static bool IsBoardAllZeros(int[,] board)
@@ -265,70 +338,118 @@ namespace Gomoku_AI.AIModels.MCTS
 
             if (isWin)
             {
-                if (Debug)
+/*                if (Debug)
                 {
                     Console.WriteLine($"DEBUG: Immediate win found at ({pMove.Row},{pMove.Col}) for player {player}");
-                }
+                }*/
                 return pMove;
             }
             return null;
         }
 
-        private static Move? FindFour(int[,] board, IRule rule, Move pMove, int player)
+        private static Move? FindOpenFour(int[,] board, IRule rule, Move pMove, int player)
         {
             board[pMove.Row, pMove.Col] = player; // Simulate move
-            bool hasFour = HasLineOfLengthX(board, pMove, player, 4);
+            bool hasOpenFour = HasLineOfLengthX(board, pMove, player, 4, isOpen: true);
             board[pMove.Row, pMove.Col] = 0; // Undo simulation
 
-            if (hasFour)
+            if (hasOpenFour)
             {
-                if (Debug)
+/*                if (Debug)
                 {
-                    Console.WriteLine($"DEBUG: Four in a row found at ({pMove.Row},{pMove.Col}) for player {player}");
-                }
+                    Console.WriteLine($"DEBUG: Open four found at ({pMove.Row},{pMove.Col}) for player {player}");
+                }*/
                 return pMove;
             }
 
             return null;
         }
 
-        private static Move? FindThree(int[,] board, IRule rule, Move pMove, int player)
+        private static Move? FindSemiOpenFour(int[,] board, IRule rule, Move pMove, int player)
         {
             board[pMove.Row, pMove.Col] = player; // Simulate move
-            bool hasThree = HasLineOfLengthX(board, pMove, player, 3);
+            bool hasSemiOpenFour = HasLineOfLengthX(board, pMove, player, 4, isOpen: false);
             board[pMove.Row, pMove.Col] = 0; // Undo simulation
 
-            if (hasThree)
+            if (hasSemiOpenFour)
             {
-                if (Debug)
+/*                if (Debug)
                 {
-                    Console.WriteLine($"DEBUG: Three in a row found at ({pMove.Row},{pMove.Col}) for player {player}");
-                }
+                    Console.WriteLine($"DEBUG: Semi-Open four found at ({pMove.Row},{pMove.Col}) for player {player}");
+                }*/
                 return pMove;
             }
-
             return null;
         }
 
-        private static Move? FindTwo(int[,] board, IRule rule, Move pMove, int player)
+        private static Move? FindOpenThree(int[,] board, IRule rule, Move pMove, int player)
         {
             board[pMove.Row, pMove.Col] = player; // Simulate move
-            bool hasTwo = HasLineOfLengthX(board, pMove, player, 2);
+            bool hasOpenThree = HasLineOfLengthX(board, pMove, player, 3, isOpen: true);
             board[pMove.Row, pMove.Col] = 0; // Undo simulation
 
-            if (hasTwo)
+            if (hasOpenThree)
             {
-                if (Debug)
+/*                if (Debug)
                 {
-                    Console.WriteLine($"DEBUG: Two in a row found at ({pMove.Row},{pMove.Col}) for player {player}");
-                }
+                    Console.WriteLine($"DEBUG: Open three found at ({pMove.Row},{pMove.Col}) for player {player}");
+                }*/
                 return pMove;
             }
-
             return null;
         }
 
-        private static bool HasLineOfLengthX(int[,] board, Move pMove, int player, int X)
+        private static Move? FindSemiOpenThree(int[,] board, IRule rule, Move pMove, int player)
+        {
+            board[pMove.Row, pMove.Col] = player; // Simulate move
+            bool hasSemiOpenThree = HasLineOfLengthX(board, pMove, player, 3, isOpen: false);
+            board[pMove.Row, pMove.Col] = 0; // Undo simulation
+
+            if (hasSemiOpenThree)
+            {
+/*                if (Debug)
+                {
+                    Console.WriteLine($"DEBUG: Semi-Open three found at ({pMove.Row},{pMove.Col}) for player {player}");
+                }*/
+                return pMove;
+            }
+            return null;
+        }
+
+        private static Move? FindOpenTwo(int[,] board, IRule rule, Move pMove, int player)
+        {
+            board[pMove.Row, pMove.Col] = player; // Simulate move
+            bool hasOpenTwo = HasLineOfLengthX(board, pMove, player, 2, isOpen: true);
+            board[pMove.Row, pMove.Col] = 0; // Undo simulation
+
+            if (hasOpenTwo)
+            {
+/*                if (Debug)
+                {
+                    Console.WriteLine($"DEBUG: Open two found at ({pMove.Row},{pMove.Col}) for player {player}");
+                }*/
+                return pMove;
+            }
+            return null;
+        }
+        private static Move? FindSemiOpenTwo(int[,] board, IRule rule, Move pMove, int player)
+        {
+            board[pMove.Row, pMove.Col] = player; // Simulate move
+            bool hasSemiOpenTwo = HasLineOfLengthX(board, pMove, player, 2, isOpen: false);
+            board[pMove.Row, pMove.Col] = 0; // Undo simulation
+
+            if (hasSemiOpenTwo)
+            {
+/*                if (Debug)
+                {
+                    Console.WriteLine($"DEBUG: Semi-Open two found at ({pMove.Row},{pMove.Col}) for player {player}");
+                }*/
+                return pMove;
+            }
+            return null;
+        }
+
+        private static bool HasLineOfLengthX(int[,] board, Move pMove, int player, int X, bool isOpen)
         {
             int rowCount = board.GetLength(0);
             int colCount = board.GetLength(1);
@@ -348,10 +469,16 @@ namespace Gomoku_AI.AIModels.MCTS
 
                 LineCheckResult check = CheckLine(board, pMove.Row, pMove.Col, player, dr, dc);
 
-                if (check.Count >= X)
+                if (check.Count == X)
                 {
-                    if (check.OpenLeft || check.OpenRight)
+                    if (check.OpenFront && check.OpenBack && isOpen)
+                    {
                         return true;
+                    }
+                    else if((check.OpenFront || check.OpenBack) && !isOpen)
+                    {
+                        return true;
+                    }
                 }
             }
 
@@ -361,8 +488,8 @@ namespace Gomoku_AI.AIModels.MCTS
         private class LineCheckResult
         {
             public int Count;
-            public bool OpenLeft;
-            public bool OpenRight;
+            public bool OpenFront;
+            public bool OpenBack;
         }
 
         private static LineCheckResult CheckLine(int[,] board, int startRow, int startCol, int player, int dr, int dc)
@@ -395,8 +522,8 @@ namespace Gomoku_AI.AIModels.MCTS
             return new LineCheckResult
             {
                 Count = count,
-                OpenLeft = backwardOpen,
-                OpenRight = forwardOpen
+                OpenFront = forwardOpen,
+                OpenBack = backwardOpen
             };
         }
 

@@ -252,7 +252,7 @@ namespace Gomoku_AI.AIModels.MCTS
                     currentNode.AddWins(1);
                     if (Debug)
                     {
-                        Console.WriteLine($"DEBUG: Node ({currentNode.Move.Row}, {currentNode.Move.Col}) wins incremented by 1.");
+                        // Console.WriteLine($"DEBUG: Node ({currentNode.Move.Row}, {currentNode.Move.Col}) wins incremented by 1.");
                     }
                 }
                 else if (result == -1)
@@ -260,7 +260,7 @@ namespace Gomoku_AI.AIModels.MCTS
                     currentNode.AddWins(0);
                     if (Debug)
                     {
-                        Console.WriteLine($"DEBUG: Node ({currentNode.Move.Row}, {currentNode.Move.Col}) wins remain unchanged (Opponent Win).");
+                        // Console.WriteLine($"DEBUG: Node ({currentNode.Move.Row}, {currentNode.Move.Col}) wins remain unchanged (Opponent Win).");
                     }
                 }
                 else
@@ -268,7 +268,7 @@ namespace Gomoku_AI.AIModels.MCTS
                     currentNode.AddWins(0);
                     if (Debug)
                     {
-                        Console.WriteLine($"DEBUG: Node ({currentNode.Move.Row}, {currentNode.Move.Col}) wins remain unchanged (Draw).");
+                        // Console.WriteLine($"DEBUG: Node ({currentNode.Move.Row}, {currentNode.Move.Col}) wins remain unchanged (Draw).");
                     }
                 }
 
