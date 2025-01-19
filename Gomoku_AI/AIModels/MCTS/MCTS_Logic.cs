@@ -177,10 +177,10 @@ namespace Gomoku_AI.AIModels.MCTS
             // Add the child node to the current node
             node.AddChild(childNode);
 
-            if (Debug)
+/*            if (Debug)
             {
                 Console.WriteLine($"DEBUG: Added child node ({moveToTry.Row}, {moveToTry.Col}), IsTerminal={childNode.IsTerminal}");
-            }
+            }*/
 
             return childNode;
         }
@@ -219,8 +219,10 @@ namespace Gomoku_AI.AIModels.MCTS
                 if (Rule.IsWinning(simulationBoard, player))
                 {
                     string winningPlayer = player == 1 ? "AI (Black)" : "Opponent (White)";
-                    if (Debug)
+/*                    if (Debug)
+                    {
                         Console.WriteLine($"DEBUG: {winningPlayer} wins the simulation.");
+                    }*/
 
                     return player == 1 ? 1 : -1; // 1 for AI win, -1 for Opponent win
                 }

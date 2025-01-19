@@ -8,7 +8,7 @@ namespace Gomoku_AI.AIModels.MCTS
 {
     public static class Prioritizer
     {
-        private static bool Debug = true;
+        private static bool Debug = false;
 
         public static List<Move> PickPrioritizedMove(int[,] board, IRule rule)
         {
@@ -22,6 +22,15 @@ namespace Gomoku_AI.AIModels.MCTS
                 int centerRow = board.GetLength(0) / 2;
                 int centerCol = board.GetLength(1) / 2;
                 return new List<Move> { new Move(centerRow, centerCol) };
+            }
+
+            if (IsBoardFull(board))
+            {
+                if (Debug)
+                {
+                    Console.WriteLine("Board is full.");
+                }
+                return new List<Move>();
             }
 
             // Categorize move lists based on patterns
@@ -43,6 +52,8 @@ namespace Gomoku_AI.AIModels.MCTS
             List<Move> createSemiOpenTwos = new List<Move>();
             List<Move> blockSemiOpenTwos = new List<Move>();
 
+            List<Move> defaultMoves = new List<Move>();
+
             int currentPlayer = CurrentPlayer.Get(board);
             int opponentPlayer = -currentPlayer;
 
@@ -59,6 +70,7 @@ namespace Gomoku_AI.AIModels.MCTS
                     if (board[row, col] == 0)
                     {
                         Move currentMove = new Move(row, col);
+                        bool patternMatched = false;
 /*                        if (Debug)
                         {
                             Console.WriteLine($"\nEvaluating Move: ({currentMove.Row},{currentMove.Col})");
@@ -82,6 +94,7 @@ namespace Gomoku_AI.AIModels.MCTS
                         Move? openFourMove = FindOpenFour(board, rule, currentMove, currentPlayer);
                         if (openFourMove != null)
                         {
+                            patternMatched = true;
                             createOpenFours.Add(openFourMove);
                         }
 
@@ -89,71 +102,91 @@ namespace Gomoku_AI.AIModels.MCTS
                         Move? blockOpenFourMove = FindOpenFour(board, rule, currentMove, opponentPlayer);
                         if (blockOpenFourMove != null)
                         {
+                            patternMatched = true;
                             blockOpenFours.Add(blockOpenFourMove);
                         }
 
                         Move? semiOpenFourMove = FindSemiOpenFour(board, rule, currentMove, currentPlayer);
                         if (semiOpenFourMove != null)
                         {
+                            patternMatched = true;
                             createSemiOpenFours.Add(semiOpenFourMove);
                         }
 
                         Move? blockSemiOpenFourMove = FindSemiOpenFour(board, rule, currentMove, opponentPlayer);
                         if (blockSemiOpenFourMove != null)
                         {
+                            patternMatched = true;
                             blockSemiOpenFours.Add(blockSemiOpenFourMove);
                         }
 
                         Move? openThreeMove = FindOpenThree(board, rule, currentMove, currentPlayer);
                         if(openThreeMove != null)
                         {
+                            patternMatched = true;
                             createOpenThrees.Add(openThreeMove);
                         }
 
                         Move? blockOpenThreeMove = FindOpenThree(board, rule, currentMove, opponentPlayer);
                         if(blockOpenThreeMove != null)
                         {
+                            patternMatched = true;
                             blockOpenThrees.Add(blockOpenThreeMove);
                         }
 
                         Move? openSemiThreeMove = FindSemiOpenThree(board, rule, currentMove, currentPlayer);
                         if (openSemiThreeMove != null)
                         {
+                            patternMatched = true;
                             createSemiOpenThrees.Add(openSemiThreeMove);
                         }
 
                         Move? blockSemiOpenThreeMove = FindSemiOpenThree(board, rule, currentMove, opponentPlayer);
                         if (blockSemiOpenThreeMove != null)
                         {
+                            patternMatched = true;
                             blockSemiOpenThrees.Add(blockSemiOpenThreeMove);
                         }
 
                         Move? openTwoMove = FindOpenTwo(board, rule, currentMove, currentPlayer);
                         if (openTwoMove != null)
                         {
+                            patternMatched = true;
                             createOpenTwos.Add(openTwoMove);
                         }
 
                         Move? blockOpenTwoMove = FindOpenTwo(board, rule, currentMove, opponentPlayer);
                         if (blockOpenTwoMove != null)
                         {
+                            patternMatched = true;
                             blockOpenTwos.Add(blockOpenTwoMove);
                         }
 
                         Move? openSemiTwoMove = FindSemiOpenTwo(board, rule, currentMove, currentPlayer);
                         if (openSemiTwoMove != null)
                         {
+                            patternMatched = true;
                             createSemiOpenTwos.Add(openSemiTwoMove);
                         }
 
                         Move? blockSemiOpenTwoMove = FindSemiOpenTwo(board, rule, currentMove, opponentPlayer);
                         if (blockSemiOpenTwoMove != null)
                         {
+                            patternMatched = true;
                             blockSemiOpenTwos.Add(blockSemiOpenTwoMove);
+                        }
+
+                        if (!patternMatched)
+                        {
+                            defaultMoves.Add(currentMove);
                         }
                     }
                 }
             }
+
+            /********************
+             * Distinct threats *
+             ********************/
 
             // Create Open Fours
             if (createOpenFours.Any())
@@ -233,6 +266,13 @@ namespace Gomoku_AI.AIModels.MCTS
                 return blockOpenThrees.Distinct().ToList();
             }
 
+
+            /***********************
+             * No distinct threats *
+             ***********************/
+
+            List<Move> availableMoves = new List<Move>();
+
             // Create Semi-Open Threes
             if (createSemiOpenThrees.Any())
             {
@@ -243,7 +283,8 @@ namespace Gomoku_AI.AIModels.MCTS
                         Console.WriteLine($"Create Semi-Open Three: ({move.Row},{move.Col}) for {currentPlayer}");
                     }
                 }
-                return createSemiOpenThrees.Distinct().ToList();
+                // return createSemiOpenThrees.Distinct().ToList();
+                availableMoves.AddRange(createSemiOpenThrees);
             }
 
             // Block Semi-Open Threes
@@ -256,7 +297,8 @@ namespace Gomoku_AI.AIModels.MCTS
                         Console.WriteLine($"Block Semi-Open Three: ({move.Row},{move.Col}) for {opponentPlayer}");
                     }
                 }
-                return blockSemiOpenThrees.Distinct().ToList();
+                // return blockSemiOpenThrees.Distinct().ToList();
+                availableMoves.AddRange(blockSemiOpenThrees);
             }
 
             // Create Open Twos
@@ -269,7 +311,8 @@ namespace Gomoku_AI.AIModels.MCTS
                         Console.WriteLine($"Create Open Twos: ({move.Row},{move.Col}) for {currentPlayer}");
                     }
                 }
-                return createOpenTwos.Distinct().ToList();
+                // return createOpenTwos.Distinct().ToList();
+                availableMoves.AddRange(createOpenTwos);
             }
             // Block Open Twos
             if (blockOpenTwos.Any())
@@ -281,7 +324,8 @@ namespace Gomoku_AI.AIModels.MCTS
                         Console.WriteLine($"Block Open Twos: ({move.Row},{move.Col}) for {opponentPlayer}");
                     }
                 }
-                return blockOpenTwos.Distinct().ToList();
+                // return blockOpenTwos.Distinct().ToList();
+                availableMoves.AddRange(blockOpenTwos);
             }
 
             // Create Semi-Open Twos
@@ -294,7 +338,8 @@ namespace Gomoku_AI.AIModels.MCTS
                         Console.WriteLine($"Create Semi-Open Twos: ({move.Row},{move.Col}) for {currentPlayer}");
                     }
                 }
-                return createSemiOpenTwos.Distinct().ToList();
+                // return createSemiOpenTwos.Distinct().ToList();
+                availableMoves.AddRange(createSemiOpenTwos);
             }
 
             // Block Semi-Open Twos
@@ -307,24 +352,54 @@ namespace Gomoku_AI.AIModels.MCTS
                         Console.WriteLine($"Block Semi-Open Twos: ({move.Row},{move.Col}) for {opponentPlayer}\n");
                     }
                 }
-                return blockSemiOpenTwos.Distinct().ToList();
+                // return blockSemiOpenTwos.Distinct().ToList();
+                availableMoves.AddRange(blockSemiOpenTwos);
+            }
+
+            if (availableMoves.Any())
+            {
+                return availableMoves.Distinct().Take(4).ToList();
             }
             /*
              * if we hit this point, it means none of the moves with existing stones 
              * leads to winning.
-             * So, we need to find move that makes 5 rows.
+             * So, we need to find any empty move, store it into List<Move> then return that.
              */
 
+            if (defaultMoves.Any())
+            {
+                if (Debug)
+                {
+                    Console.WriteLine("No prioritized moves found. Selecting default moves.");
+                    foreach (Move move in defaultMoves)
+                    {
+                        Console.WriteLine($"Default Move: ({move.Row},{move.Col})");
+                    }
+                }
+                return defaultMoves.Distinct().ToList();
+            }
+
+            Console.WriteLine("Red flag");
+
+
             // this shouldn't happen
-            BoardVisualizer.PrintBoard(board);
             throw new NotImplementedException();
         }
-
         private static bool IsBoardAllZeros(int[,] board)
         {
             foreach (int cell in board)
             {
                 if (cell != 0)
+                    return false;
+            }
+            return true;
+        }
+
+        private static bool IsBoardFull(int[,] board)
+        {
+            foreach (int cell in board)
+            {
+                if (cell == 0)
                     return false;
             }
             return true;
