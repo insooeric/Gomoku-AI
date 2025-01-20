@@ -47,7 +47,7 @@ public class MCTS_Node
             double uctScore;
             if (child.Visits == 0)
             {
-                uctScore = double.MaxValue; // Prioritize unvisited nodes
+                uctScore = double.MaxValue;
             }
             else
             {
@@ -87,7 +87,7 @@ public class MCTS_Node
 
         if (untriedMoves.Count == 0)
         {
-            return null; // No moves to expand
+            return null;
         }
 
         // Randomly select an untried move

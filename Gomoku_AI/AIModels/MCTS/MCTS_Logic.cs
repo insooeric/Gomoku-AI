@@ -16,10 +16,9 @@ namespace Gomoku_AI.AIModels.MCTS
 
         private static readonly double ExplorationConstant = Math.Sqrt(2);
 
-        public MCTS_Logic(MCTS_Node root, /*IRule rule,*/ int iterations = 1000)
+        public MCTS_Logic(MCTS_Node root, int iterations = 1000)
         {
             RootNode = root;
-            //Rule = rule;
             Iterations = iterations;
         }
 
@@ -31,7 +30,7 @@ namespace Gomoku_AI.AIModels.MCTS
                 {
                     Console.WriteLine($"\nIteration #{i + 1}");
                 }
-                // Selection
+
                 MCTS_Node selectedNode = Selection(RootNode);
                 if (Debug)
                 {
@@ -41,7 +40,7 @@ namespace Gomoku_AI.AIModels.MCTS
                         Console.WriteLine($"    Selection: Root Node");
                 }
 
-                // Expansion
+
                 MCTS_Node expandedNode = selectedNode.Expand();
 
                 if (expandedNode == null)
@@ -55,10 +54,8 @@ namespace Gomoku_AI.AIModels.MCTS
                     continue;
                 }
 
-                // Simulation
                 int simulationResult = expandedNode.Simulate();
 
-                // Backpropagation
                 expandedNode.Backpropagate(simulationResult);
             }
 

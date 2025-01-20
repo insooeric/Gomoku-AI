@@ -12,7 +12,6 @@ namespace Gomoku_AI.AIModels.MCTS
 
         public static List<Move> PickPrioritizedMove(int[,] board, IRule rule)
         {
-            // If the board is empty, place the stone in the center.
             if (IsBoardAllZeros(board))
             {
                 if (Debug)
@@ -35,7 +34,6 @@ namespace Gomoku_AI.AIModels.MCTS
 
             List<Move> blackForbiddenMoves = new List<Move>();
 
-            // Categorize move lists based on patterns
             List<Move> createOpenFours = new List<Move>();
             List<Move> blockOpenFours = new List<Move>();
 
@@ -64,12 +62,11 @@ namespace Gomoku_AI.AIModels.MCTS
                 Console.WriteLine("\nPrioritizing moves.");
             }
 
-            if (currentPlayer == 1) // AI is Black
+            if (currentPlayer == 1)
             {
                 blackForbiddenMoves = FindForbiddenMoves(board, 1, rule);
             }
 
-            // Iterate through all cells to categorize potential moves
             for (int row = 0; row < board.GetLength(0); row++)
             {
                 for (int col = 0; col < board.GetLength(1); col++)
@@ -84,21 +81,18 @@ namespace Gomoku_AI.AIModels.MCTS
                             continue;
                         }
 
-                        // Immediate Win for AI
                         Move? winningMove = FindImmediateWin(board, rule, currentMove, currentPlayer);
                         if (winningMove != null)
                         {
                             return new List<Move>() { winningMove };
                         }
 
-                        // Block Opponent's Immediate Win
                         Move? blockMove = FindImmediateWin(board, rule, currentMove, opponentPlayer);
                         if (blockMove != null)
                         {
                             return new List<Move>() { blockMove };
                         }
 
-                        // Create Four for AI
                         Move? openFourMove = FindOpenFour(board, rule, currentMove, currentPlayer);
                         if (openFourMove != null)
                         {
@@ -106,7 +100,6 @@ namespace Gomoku_AI.AIModels.MCTS
                             createOpenFours.Add(openFourMove);
                         }
 
-                        // Block Opponent's Four
                         Move? blockOpenFourMove = FindOpenFour(board, rule, currentMove, opponentPlayer);
                         if (blockOpenFourMove != null)
                         {
@@ -195,8 +188,6 @@ namespace Gomoku_AI.AIModels.MCTS
             /********************
              * Distinct threats *
              ********************/
-
-            // Create Open Fours
             if (createOpenFours.Any())
             {
                 if (Debug)
@@ -206,7 +197,6 @@ namespace Gomoku_AI.AIModels.MCTS
                         Console.WriteLine($"Create Open Four: ({move.Row},{move.Col}) for {currentPlayer}");
                     }
                 }
-                // return createOpenFours.Distinct().ToList();
             }
 
             // Block Open Fours
@@ -219,7 +209,6 @@ namespace Gomoku_AI.AIModels.MCTS
                         Console.WriteLine($"Block Open Four: ({move.Row},{move.Col}) for {opponentPlayer}");
                     }
                 }
-                // return blockOpenFours.Distinct().ToList();
             }
             if(createOpenFours.Any() || blockOpenFours.Any())
             {
@@ -227,7 +216,6 @@ namespace Gomoku_AI.AIModels.MCTS
                 return mergedFours;
             }
 
-            // Create Semi-Open Fours
             if (createSemiOpenFours.Any())
             {
                 if (Debug)
@@ -240,7 +228,6 @@ namespace Gomoku_AI.AIModels.MCTS
                 return createSemiOpenFours.Distinct().ToList();
             }
 
-            // Block Semi-Open Fours
             if (blockSemiOpenFours.Any())
             {
                 if (Debug)
@@ -253,7 +240,6 @@ namespace Gomoku_AI.AIModels.MCTS
                 return blockSemiOpenFours.Distinct().ToList();
             }
 
-            // Create Open Threes
             if (createOpenThrees.Any())
             {
                 if (Debug)
@@ -266,7 +252,6 @@ namespace Gomoku_AI.AIModels.MCTS
                 return createOpenThrees.Distinct().ToList();
             }
 
-            // Block Open Threes
             if (blockOpenThrees.Any())
             {
                 if (Debug)
@@ -283,10 +268,8 @@ namespace Gomoku_AI.AIModels.MCTS
             /***********************
              * No distinct threats *
              ***********************/
-
             List<Move> availableMoves = new List<Move>();
 
-            // Create Semi-Open Threes
             if (createSemiOpenThrees.Any())
             {
                 if (Debug)
@@ -296,11 +279,9 @@ namespace Gomoku_AI.AIModels.MCTS
                         Console.WriteLine($"Create Semi-Open Three: ({move.Row},{move.Col}) for {currentPlayer}");
                     }
                 }
-                // return createSemiOpenThrees.Distinct().ToList();
                 availableMoves.AddRange(createSemiOpenThrees);
             }
 
-            // Block Semi-Open Threes
             if (blockSemiOpenThrees.Any())
             {
                 if (Debug)
@@ -310,7 +291,6 @@ namespace Gomoku_AI.AIModels.MCTS
                         Console.WriteLine($"Block Semi-Open Three: ({move.Row},{move.Col}) for {opponentPlayer}");
                     }
                 }
-                // return blockSemiOpenThrees.Distinct().ToList();
                 availableMoves.AddRange(blockSemiOpenThrees);
             }
 
@@ -324,7 +304,6 @@ namespace Gomoku_AI.AIModels.MCTS
                         Console.WriteLine($"Create Open Twos: ({move.Row},{move.Col}) for {currentPlayer}");
                     }
                 }
-                // return createOpenTwos.Distinct().ToList();
                 availableMoves.AddRange(createOpenTwos);
             }
             // Block Open Twos
@@ -337,7 +316,6 @@ namespace Gomoku_AI.AIModels.MCTS
                         Console.WriteLine($"Block Open Twos: ({move.Row},{move.Col}) for {opponentPlayer}");
                     }
                 }
-                // return blockOpenTwos.Distinct().ToList();
                 availableMoves.AddRange(blockOpenTwos);
             }
 
@@ -351,11 +329,9 @@ namespace Gomoku_AI.AIModels.MCTS
                         Console.WriteLine($"Create Semi-Open Twos: ({move.Row},{move.Col}) for {currentPlayer}");
                     }
                 }
-                // return createSemiOpenTwos.Distinct().ToList();
                 availableMoves.AddRange(createSemiOpenTwos);
             }
 
-            // Block Semi-Open Twos
             if (blockSemiOpenTwos.Any())
             {
                 if (Debug)
@@ -365,7 +341,6 @@ namespace Gomoku_AI.AIModels.MCTS
                         Console.WriteLine($"Block Semi-Open Twos: ({move.Row},{move.Col}) for {opponentPlayer}\n");
                     }
                 }
-                // return blockSemiOpenTwos.Distinct().ToList();
                 availableMoves.AddRange(blockSemiOpenTwos);
             }
 
@@ -373,11 +348,6 @@ namespace Gomoku_AI.AIModels.MCTS
             {
                 return availableMoves.Distinct().Take(4).ToList();
             }
-            /*
-             * if we hit this point, it means none of the moves with existing stones 
-             * leads to winning.
-             * So, we need to find any empty move, store it into List<Move> then return that.
-             */
 
             if (defaultMoves.Any())
             {
@@ -392,8 +362,6 @@ namespace Gomoku_AI.AIModels.MCTS
                 return defaultMoves.Distinct().ToList();
             }
 
-
-            // this shouldn't happen
             throw new NotImplementedException();
         }
 
@@ -408,7 +376,7 @@ namespace Gomoku_AI.AIModels.MCTS
                     if (board[row, col] == 0)
                     {
                         Move simulatedMove = new Move(row, col);
-                        board[row, col] = player; // Simulate move
+                        board[row, col] = player;
 
                         bool isForbidden = false;
 
@@ -417,11 +385,10 @@ namespace Gomoku_AI.AIModels.MCTS
                             isForbidden = renju.IsForbiddenMove(board);
                         }
 
-                        board[row, col] = 0; // Undo simulation
+                        board[row, col] = 0;
 
                         if (isForbidden)
                         {
-                            // Console.WriteLine($"Found forbidden move: ({simulatedMove.Row},{simulatedMove.Col})");
                             forbiddenMoves.Add(simulatedMove);
                         }
                     }
@@ -453,9 +420,9 @@ namespace Gomoku_AI.AIModels.MCTS
 
         private static Move? FindImmediateWin(int[,] board, IRule rule, Move pMove, int player)
         {
-            board[pMove.Row, pMove.Col] = player; // Simulate move
+            board[pMove.Row, pMove.Col] = player;
             bool isWin = rule.IsWinning(board, player);
-            board[pMove.Row, pMove.Col] = 0; // Undo simulation
+            board[pMove.Row, pMove.Col] = 0;
 
             if (isWin)
             {
@@ -470,9 +437,9 @@ namespace Gomoku_AI.AIModels.MCTS
 
         private static Move? FindOpenFour(int[,] board, IRule rule, Move pMove, int player)
         {
-            board[pMove.Row, pMove.Col] = player; // Simulate move
+            board[pMove.Row, pMove.Col] = player;
             bool hasOpenFour = HasLineOfLengthX(board, pMove, player, 4, isOpen: true);
-            board[pMove.Row, pMove.Col] = 0; // Undo simulation
+            board[pMove.Row, pMove.Col] = 0;
 
             if (hasOpenFour)
             {
@@ -488,10 +455,10 @@ namespace Gomoku_AI.AIModels.MCTS
 
         private static Move? FindSemiOpenFour(int[,] board, IRule rule, Move pMove, int player)
         {
-            board[pMove.Row, pMove.Col] = player; // Simulate move
+            board[pMove.Row, pMove.Col] = player;
             bool hasSemiOpenFour = HasLineOfLengthX(board, pMove, player, 4, isOpen: false);
 
-            board[pMove.Row, pMove.Col] = 0; // Undo simulation
+            board[pMove.Row, pMove.Col] = 0;
 
             if (hasSemiOpenFour)
             {
@@ -506,10 +473,10 @@ namespace Gomoku_AI.AIModels.MCTS
 
         private static Move? FindOpenThree(int[,] board, IRule rule, Move pMove, int player)
         {
-            board[pMove.Row, pMove.Col] = player; // Simulate move
+            board[pMove.Row, pMove.Col] = player;
             bool hasOpenThree = HasLineOfLengthX(board, pMove, player, 3, isOpen: true);
 
-            board[pMove.Row, pMove.Col] = 0; // Undo simulation
+            board[pMove.Row, pMove.Col] = 0;
 
             if (hasOpenThree)
             {
@@ -524,9 +491,9 @@ namespace Gomoku_AI.AIModels.MCTS
 
         private static Move? FindSemiOpenThree(int[,] board, IRule rule, Move pMove, int player)
         {
-            board[pMove.Row, pMove.Col] = player; // Simulate move
+            board[pMove.Row, pMove.Col] = player;
             bool hasSemiOpenThree = HasLineOfLengthX(board, pMove, player, 3, isOpen: false);
-            board[pMove.Row, pMove.Col] = 0; // Undo simulation
+            board[pMove.Row, pMove.Col] = 0;
 
             if (hasSemiOpenThree)
             {
@@ -541,10 +508,10 @@ namespace Gomoku_AI.AIModels.MCTS
 
         private static Move? FindOpenTwo(int[,] board, IRule rule, Move pMove, int player)
         {
-            board[pMove.Row, pMove.Col] = player; // Simulate move
+            board[pMove.Row, pMove.Col] = player;
             bool hasOpenTwo = HasLineOfLengthX(board, pMove, player, 2, isOpen: true);
 
-            board[pMove.Row, pMove.Col] = 0; // Undo simulation
+            board[pMove.Row, pMove.Col] = 0;
 
             if (hasOpenTwo)
             {
@@ -558,9 +525,9 @@ namespace Gomoku_AI.AIModels.MCTS
         }
         private static Move? FindSemiOpenTwo(int[,] board, IRule rule, Move pMove, int player)
         {
-            board[pMove.Row, pMove.Col] = player; // Simulate move
+            board[pMove.Row, pMove.Col] = player;
             bool hasSemiOpenTwo = HasLineOfLengthX(board, pMove, player, 2, isOpen: false);
-            board[pMove.Row, pMove.Col] = 0; // Undo simulation
+            board[pMove.Row, pMove.Col] = 0;
 
             if (hasSemiOpenTwo)
             {
