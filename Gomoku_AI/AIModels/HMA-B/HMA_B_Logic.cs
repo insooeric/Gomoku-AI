@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Gomoku_AI.AIModels.HMA_B
 {
-    public class Logic
+    public class HMA_B_Logic
     {
         private readonly int depth;
         private readonly IRule rule;
@@ -15,13 +15,13 @@ namespace Gomoku_AI.AIModels.HMA_B
 
         private int realPlayer;
 
-        private readonly Evaluator evaluator;
+        private readonly HMA_B_Evaluator evaluator;
 
-        public Logic(int depth, IRule rule)
+        public HMA_B_Logic(int depth, IRule rule)
         {
             this.depth = depth;
             this.rule = rule;
-            this.evaluator = new Evaluator(rule);
+            this.evaluator = new HMA_B_Evaluator(rule);
         }
 
         public (double, int, int) GetBestMove(int[,] board, int currentPlayer)

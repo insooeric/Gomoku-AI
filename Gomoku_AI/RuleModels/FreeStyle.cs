@@ -10,10 +10,22 @@
 
         public bool IsWinning(int[,] board, int player)
         {
-            return CheckRows(board, player) ||
-                   CheckColumns(board, player) ||
-                   CheckDiagonals(board, player) ||
-                   CheckAntiDiagonals(board, player);
+            bool hasWon = CheckRows(board, player) ||
+                          CheckColumns(board, player) ||
+                          CheckDiagonals(board, player) ||
+                          CheckAntiDiagonals(board, player);
+
+            if (hasWon)
+            {
+                // Console.WriteLine($"Player {player} has achieved a winning condition.");
+            }
+
+            return hasWon;
+        }
+
+        public bool IsForbiddenMove(int[,] board)
+        {
+            return false;
         }
 
         private bool CheckRows(int[,] board, int player)
@@ -76,6 +88,12 @@
                 }
             }
             return false;
+        }
+
+        public IRule Clone()
+        {
+            // Since Renju is stateless, return a new instance
+            return new FreeStyle();
         }
     }
 }

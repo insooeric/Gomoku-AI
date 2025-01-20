@@ -3,14 +3,14 @@ using Gomoku_AI.RuleModels;
 
 namespace Gomoku_AI.AIModels.HMA_B
 {
-    public class Evaluator
+    public class HMA_B_Evaluator
     {
         private readonly IRule rule;
 
         private const int WIN_SCORE = 1000000;
         private const int LOSE_SCORE = -1000000;
 
-        public Evaluator(IRule rule)
+        public HMA_B_Evaluator(IRule rule)
         {
             this.rule = rule;
         }
