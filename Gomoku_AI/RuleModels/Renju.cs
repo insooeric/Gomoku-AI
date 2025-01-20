@@ -101,215 +101,133 @@ namespace Gomoku_AI.RuleModels
         {
             int openFours = 0;
 
-            for (int x = 0; x < board.GetLength(0); x++)
+            // Define directions: Horizontal, Vertical, Diagonal ↘, Diagonal ↗
+            var directions = new (int dx, int dy)[]
             {
-                for (int y = 0; y <= board.GetLength(1) - 4; y++)
-                {
-                    bool sequence = true;
-                    for (int i = 0; i < 4; i++)
-                    {
-                        if (board[x, y + i] != player)
-                        {
-                            sequence = false;
-                            break;
-                        }
-                    }
-                    if (sequence)
-                    {
-                        bool openLeft = (y - 1 >= 0) && (board[x, y - 1] == 0);
-                        bool openRight = (y + 4 < board.GetLength(1)) && (board[x, y + 4] == 0);
-                        if (openLeft && openRight)
-                        {
-                            openFours++;
-                        }
-                    }
-                }
-            }
+        (0, 1),   // Horizontal
+        (1, 0),   // Vertical
+        (1, 1),   // Diagonal ↘
+        (-1, 1)   // Diagonal ↗
+            };
 
-            for (int y = 0; y < board.GetLength(1); y++)
+            foreach (var (dx, dy) in directions)
             {
-                for (int x = 0; x <= board.GetLength(0) - 4; x++)
-                {
-                    bool sequence = true;
-                    for (int i = 0; i < 4; i++)
-                    {
-                        if (board[x + i, y] != player)
-                        {
-                            sequence = false;
-                            break;
-                        }
-                    }
-                    if (sequence)
-                    {
-                        bool openTop = (x - 1 >= 0) && (board[x - 1, y] == 0);
-                        bool openBottom = (x + 4 < board.GetLength(0)) && (board[x + 4, y] == 0);
-                        if (openTop && openBottom)
-                        {
-                            openFours++;
-                        }
-                    }
-                }
-            }
+                bool hasOpenFourInDirection = false;
 
-            for (int x = 0; x <= board.GetLength(0) - 4; x++)
-            {
-                for (int y = 0; y <= board.GetLength(1) - 4; y++)
+                for (int x = 0; x < board.GetLength(0); x++)
                 {
-                    bool sequence = true;
-                    for (int i = 0; i < 4; i++)
+                    for (int y = 0; y < board.GetLength(1); y++)
                     {
-                        if (board[x + i, y + i] != player)
+                        // Check if a four-in-a-row starts at (x,y) in direction (dx, dy)
+                        bool sequence = true;
+                        for (int i = 0; i < 4; i++)
                         {
-                            sequence = false;
-                            break;
-                        }
-                    }
-                    if (sequence)
-                    {
-                        bool openStart = (x - 1 >= 0) && (y - 1 >= 0) && (board[x - 1, y - 1] == 0);
-                        bool openEnd = (x + 4 < board.GetLength(0)) && (y + 4 < board.GetLength(1)) && (board[x + 4, y + 4] == 0);
-                        if (openStart && openEnd)
-                        {
-                            openFours++;
-                        }
-                    }
-                }
-            }
+                            int newX = x + i * dx;
+                            int newY = y + i * dy;
 
-            for (int x = 0; x <= board.GetLength(0) - 4; x++)
-            {
-                for (int y = 3; y < board.GetLength(1); y++)
-                {
-                    bool sequence = true;
-                    for (int i = 0; i < 4; i++)
-                    {
-                        if (board[x + i, y - i] != player)
+                            if (!IsWithinBounds(newX, newY, board) || board[newX, newY] != player)
+                            {
+                                sequence = false;
+                                break;
+                            }
+                        }
+
+                        if (sequence)
                         {
-                            sequence = false;
-                            break;
+                            // Check if both ends are open
+                            int beforeX = x - dx;
+                            int beforeY = y - dy;
+                            int afterX = x + 4 * dx;
+                            int afterY = y + 4 * dy;
+
+                            bool openStart = IsWithinBounds(beforeX, beforeY, board) && board[beforeX, beforeY] == 0;
+                            bool openEnd = IsWithinBounds(afterX, afterY, board) && board[afterX, afterY] == 0;
+
+                            if (openStart && openEnd)
+                            {
+                                hasOpenFourInDirection = true;
+                                break; // Only need one open four per direction
+                            }
                         }
                     }
-                    if (sequence)
-                    {
-                        bool openStart = (x - 1 >= 0) && (y + 1 < board.GetLength(1)) && (board[x - 1, y + 1] == 0);
-                        bool openEnd = (x + 4 < board.GetLength(0)) && (y - 4 >= 0) && (board[x + 4, y - 4] == 0);
-                        if (openStart && openEnd)
-                        {
-                            openFours++;
-                        }
-                    }
+
+                    if (hasOpenFourInDirection)
+                        break; // Move to next direction
                 }
+
+                if (hasOpenFourInDirection)
+                    openFours++;
             }
 
             return openFours;
         }
 
+
         private int CountOpenThrees(int[,] board, int player)
         {
             int openThrees = 0;
 
-            for (int x = 0; x < board.GetLength(0); x++)
+            // Define directions: Horizontal, Vertical, Diagonal ↘, Diagonal ↗
+            var directions = new (int dx, int dy)[]
             {
-                for (int y = 0; y <= board.GetLength(1) - 3; y++)
-                {
-                    bool sequence = true;
-                    for (int i = 0; i < 3; i++)
-                    {
-                        if (board[x, y + i] != player)
-                        {
-                            sequence = false;
-                            break;
-                        }
-                    }
-                    if (sequence)
-                    {
-                        bool openLeft = (y - 1 >= 0) && (board[x, y - 1] == 0);
-                        bool openRight = (y + 3 < board.GetLength(1)) && (board[x, y + 3] == 0);
-                        if (openLeft && openRight)
-                        {
-                            openThrees++;
-                        }
-                    }
-                }
-            }
+        (0, 1),   // Horizontal
+        (1, 0),   // Vertical
+        (1, 1),   // Diagonal ↘
+        (-1, 1)   // Diagonal ↗
+            };
 
-            for (int y = 0; y < board.GetLength(1); y++)
+            foreach (var (dx, dy) in directions)
             {
-                for (int x = 0; x <= board.GetLength(0) - 3; x++)
-                {
-                    bool sequence = true;
-                    for (int i = 0; i < 3; i++)
-                    {
-                        if (board[x + i, y] != player)
-                        {
-                            sequence = false;
-                            break;
-                        }
-                    }
-                    if (sequence)
-                    {
-                        bool openTop = (x - 1 >= 0) && (board[x - 1, y] == 0);
-                        bool openBottom = (x + 3 < board.GetLength(0)) && (board[x + 3, y] == 0);
-                        if (openTop && openBottom)
-                        {
-                            openThrees++;
-                        }
-                    }
-                }
-            }
+                bool hasOpenThreeInDirection = false;
 
-            for (int x = 0; x <= board.GetLength(0) - 3; x++)
-            {
-                for (int y = 0; y <= board.GetLength(1) - 3; y++)
+                for (int x = 0; x < board.GetLength(0); x++)
                 {
-                    bool sequence = true;
-                    for (int i = 0; i < 3; i++)
+                    for (int y = 0; y < board.GetLength(1); y++)
                     {
-                        if (board[x + i, y + i] != player)
+                        // Check if a three-in-a-row starts at (x,y) in direction (dx, dy)
+                        bool sequence = true;
+                        for (int i = 0; i < 3; i++)
                         {
-                            sequence = false;
-                            break;
-                        }
-                    }
-                    if (sequence)
-                    {
-                        bool openStart = (x - 1 >= 0) && (y - 1 >= 0) && (board[x - 1, y - 1] == 0);
-                        bool openEnd = (x + 3 < board.GetLength(0)) && (y + 3 < board.GetLength(1)) && (board[x + 3, y + 3] == 0);
-                        if (openStart && openEnd)
-                        {
-                            openThrees++;
-                        }
-                    }
-                }
-            }
+                            int newX = x + i * dx;
+                            int newY = y + i * dy;
 
-            for (int x = 0; x <= board.GetLength(0) - 3; x++)
-            {
-                for (int y = 2; y < board.GetLength(1); y++)
-                {
-                    bool sequence = true;
-                    for (int i = 0; i < 3; i++)
-                    {
-                        if (board[x + i, y - i] != player)
+                            if (!IsWithinBounds(newX, newY, board) || board[newX, newY] != player)
+                            {
+                                sequence = false;
+                                break;
+                            }
+                        }
+
+                        if (sequence)
                         {
-                            sequence = false;
-                            break;
+                            // Check if both ends are open
+                            int beforeX = x - dx;
+                            int beforeY = y - dy;
+                            int afterX = x + 3 * dx;
+                            int afterY = y + 3 * dy;
+
+                            bool openStart = IsWithinBounds(beforeX, beforeY, board) && board[beforeX, beforeY] == 0;
+                            bool openEnd = IsWithinBounds(afterX, afterY, board) && board[afterX, afterY] == 0;
+
+                            if (openStart && openEnd)
+                            {
+                                hasOpenThreeInDirection = true;
+                                break; // Only need one open three per direction
+                            }
                         }
                     }
-                    if (sequence)
-                    {
-                        bool openStart = (x - 1 >= 0) && (y + 1 < board.GetLength(1)) && (board[x - 1, y + 1] == 0);
-                        bool openEnd = (x + 3 < board.GetLength(0)) && (y - 3 >= 0) && (board[x + 3, y - 3] == 0);
-                        if (openStart && openEnd)
-                        {
-                            openThrees++;
-                        }
-                    }
+
+                    if (hasOpenThreeInDirection)
+                        break; // Move to next direction
                 }
+
+                if (hasOpenThreeInDirection)
+                    openThrees++;
             }
 
             return openThrees;
         }
+
 
         private bool IsThree(int[,] board, int player, int startX, int startY, int deltaX, int deltaY)
         {
@@ -425,6 +343,11 @@ namespace Gomoku_AI.RuleModels
                 }
             }
             return false;
+        }
+
+        private static bool IsWithinBounds(int r, int c, int[,] board)
+        {
+            return r >= 0 && r < board.GetLength(0) && c >= 0 && c < board.GetLength(1);
         }
 
         public IRule Clone()

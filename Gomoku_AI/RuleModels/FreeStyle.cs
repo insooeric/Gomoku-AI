@@ -23,13 +23,10 @@
             return hasWon;
         }
 
-        /*        public bool IsWinning(int[,] board, int player)
-                {
-                    return CheckRows(board, player) ||
-                           CheckColumns(board, player) ||
-                           CheckDiagonals(board, player) ||
-                           CheckAntiDiagonals(board, player);
-                }*/
+        public bool IsForbiddenMove(int[,] board)
+        {
+            return false;
+        }
 
         private bool CheckRows(int[,] board, int player)
         {

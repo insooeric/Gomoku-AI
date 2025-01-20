@@ -169,8 +169,10 @@ namespace Gomoku_AI.Controllers
                 }
 
                 // start from here
-                MCTS_Logic mcts = new MCTS_Logic(request.Depth, rule);
-                Move bestMove = mcts.Search(board);
+
+                MCTS_Node rootNode = new MCTS_Node(board, currentPlayer, rule);
+                MCTS_Logic mcts = new MCTS_Logic(rootNode, request.Depth);
+                Move bestMove = mcts.Search();
 
                 // Just In Case
                 if (bestMove == null)
