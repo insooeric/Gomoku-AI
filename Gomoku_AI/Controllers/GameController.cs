@@ -174,19 +174,36 @@ namespace Gomoku_AI.Controllers
                 MCTS_Logic mcts = new MCTS_Logic(rootNode, request.Depth);
                 Move bestMove = mcts.Search();
 
-                // Just In Case
-                if (bestMove == null)
+                int[,] tmpBoard = BoardUtility.CloneBoard(board);
+
+                if (bestMove.Row >= 0 && bestMove.Col >= 0 && bestMove.Row < tmpBoard.GetLength(0) && bestMove.Col < tmpBoard.GetLength(1))
+                {
+                    tmpBoard[bestMove.Row, bestMove.Col] = currentPlayer;
+                }
+
+                if (CheckBoardStatus.CheckWinner(tmpBoard) == currentPlayer)
                 {
                     return Ok(new
                     {
-                        status = "NoValidMoves",
-                        x = -1,
-                        y = -1,
+                        status = "Win",
+                        x = bestMove.Row,
+                        y = bestMove.Col,
                         color = currentPlayer == 1 ? "Black" : "White",
-                        message = "This shouldn't happen."
+                        message = $"{(currentPlayer == 1 ? "Black" : "White")} Wins 🎉"
                     });
                 }
 
+                if (CheckBoardStatus.IsBoardFull(tmpBoard))
+                {
+                    return Ok(new
+                    {
+                        status = "Draw",
+                        x = -1,
+                        y = -1,
+                        color = currentPlayer == 1 ? "Black" : "White",
+                        message = "It's a Draw 🤝"
+                    });
+                }
 
                 return Ok(new
                 {
