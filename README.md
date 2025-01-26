@@ -1,5 +1,4 @@
 # Gomoku-AI 
-(Hey, I need to modify this)
 
 A Gomoku AI that uses various AI algorithm that evaluates the game under rules and give optimized result.
 
