@@ -28,8 +28,8 @@ The project implements a Gomoku (also known as Five in a Row) game with followin
 2. **Minimax**, **Alpha-beta puring**, and **Heuristic Scoring**
 
 It also utilizes at least one of the following rules:
-1. **Free Style Rule** [https://en.wikipedia.org/wiki/Gomoku/#Freestyle gomoku]
-2. **Renju Rule** [https://en.wikipedia.org/wiki/Gomoku/#Renju]
+1. **Free Style Rule** [https://en.wikipedia.org/wiki/Gomoku#Freestyle gomoku]
+2. **Renju Rule** [https://en.wikipedia.org/wiki/Gomoku#Renju]
 
 ## Structure
 Followings are the core components:
