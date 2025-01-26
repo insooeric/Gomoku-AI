@@ -1,6 +1,6 @@
 # Gomoku-AI 
 
-A Gomoku AI that uses various AI algorithm that evaluates the game under rules and give optimized result.
+A Gomoku AI that uses various AI algorithm and evaluates the game under rules and give optimized result.
 
 ---
 
