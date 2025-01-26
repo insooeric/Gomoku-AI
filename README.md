@@ -30,6 +30,7 @@ The project implements a Gomoku (also known as Five in a Row) game with followin
 It also utilizes at least one of the following rules:
 1. **Free Style Rule**
 2. **Renju Rule**
+
 [https://en.wikipedia.org/wiki/Gomoku#Variants] <= Learn More about rules!
 
 ## Structure
