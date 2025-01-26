@@ -21,7 +21,7 @@ A Gomoku AI that uses various AI algorithm and evaluates the game under rules an
 ---
 
 ## Overview
-This project is build in .NET 8, with two API endpoints that receives 2D Board, Depth/Iteration, and Rule. 
+This project is built in .NET 8, with two API endpoints that receives 2D Board, Depth/Iteration, and Rule. 
 The project implements a Gomoku (also known as Five in a Row) game with following AI algorithms for move evaluation and selection:
 1. **Monte Carlo Tree Search** and **Priority**
 2. **Minimax**, **Alpha-beta puring**, and **Heuristic Scoring**
