@@ -1,7 +1,7 @@
 # Gomoku-AI 
 
 A Gomoku AI that uses various AI algorithm and evaluates the game under rules and give optimized result.
-## DEMO LINK! => [Gomoku AI](https://insooeric.github.io/#/playground)
+### DEMO LINK! => [Gomoku AI](https://insooeric.github.io/#/playground)
 ---
 
 ## Table of Contents
